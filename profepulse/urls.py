@@ -16,8 +16,10 @@ Including another URLconf
 from django.contrib import admin
 from django.urls import path
 from review import views as reviewViews
+from profesores import views as profesoresViews
 
 urlpatterns = [
     path('admin/', admin.site.urls),
-    path('', reviewViews.home)
+    path('', reviewViews.home),
+    path('profesores/', profesoresViews.lista_profesores)
 ]
