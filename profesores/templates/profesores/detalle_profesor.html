@@ -1,0 +1,23 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Detalle del Profesor</title>
+</head>
+<body>
+    <h1>{{ profesor.nombre }}</h1>
+    <p>Materia: {{ profesor.materia }}</p>
+    <p>Departamento: {{ profesor.departamento }}</p>
+
+    <h2>Comentarios</h2>
+    {% for comentario in comentarios %}
+        <div>
+            <p><strong>{{ comentario.usuario }}:</strong> {{ comentario.contenido }}</p>
+            <p><small>{{ comentario.fecha }}</small></p>
+        </div>
+    {% empty %}
+        <p>No hay comentarios aún.</p>
+    {% endfor %}
+
+    <a href="{% url 'agregar_comentario' profesor.id %}">Agregar Comentario</a>
+</body>
+</html>
