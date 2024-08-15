@@ -1,5 +1,7 @@
 from django.shortcuts import render
 from .models import Profesor
+from django.shortcuts import render, get_object_or_404
+
 
 def lista_profesores(request):
     searchNombre = request.GET.get('searchNombre', '')
@@ -26,4 +28,12 @@ def lista_profesores(request):
         'searchNombre': searchNombre,
         'searchMateria': searchMateria,
         'searchDepartamento': searchDepartamento
+    })
+
+def detalle_profesor(request, profesor_id):
+    profesor = get_object_or_404(Profesor, pk=profesor_id)
+    comentarios = profesor.comentarios.all()
+    return render(request, 'profesores/detalle_profesor.html', {
+        'profesor': profesor,
+        'comentarios': comentarios
     })
