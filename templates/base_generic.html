@@ -9,14 +9,16 @@
 </head>
 <body>
     <header>
-        <a href="/">Inicio</a>
-        <a href="/profesores/">Profesores</a>
-        <a href="/comentar/">Agregar Comentario</a>
-        {% if user.is_authenticated %}
-            <a href="{% url 'logout' %}">Cerrar sesión</a>
-        {% else %}
-            <a href="{% url 'login' %}">Iniciar sesión</a>
-        {% endif %}
+        <img src="{% static 'images/logo_eafit_completo.png' %}" alt="Logo" class="logo">
+        <nav>
+            <a href="/">Inicio</a>
+            <a href="/profesores/">Profesores</a>
+            {% if user.is_authenticated %}
+                <a href="{% url 'logout' %}">Cerrar sesión</a>
+            {% else %}
+                <a href="{% url 'login' %}">Iniciar sesión</a>
+            {% endif %}
+        </nav>
     </header>
 
     <main>
