@@ -32,7 +32,7 @@
                         {% for i in "12345" %}
                             <span class="bi bi-star{% if i|add:0 > comentario.rating %}-outline{% endif %}"></span>
                         {% endfor %}
-                        ({{ profesor.calificacion_media|floatformat:1 }})
+                        ({{ comentario.rating|floatformat:1 }})
                     </p>
                 </div>
             {% endfor %}
