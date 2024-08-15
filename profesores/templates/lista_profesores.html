@@ -31,7 +31,11 @@
             <div class="col">
                 <div class="card">
                     <div class="card-body">
-                        <h5 class="card-title fw-bold">{{ profesor.nombre }}</h5>
+                        <h5 class="card-title">
+                            <a href="{% url 'detalle_profesor' profesor.id %}" class="text-decoration-none">
+                                {{ profesor.nombre }}
+                            </a>
+                        </h5>
                         <p class="card-text">Departamento: {{ profesor.departamento }}</p>
                         <p class="card-text">Materia: {{ profesor.materia }}</p>
                         {% if profesor.calificacion_media %}
