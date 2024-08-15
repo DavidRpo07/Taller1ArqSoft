@@ -9,10 +9,24 @@ body {
 
 /* Estilo para el encabezado */
 header {
+    display: flex; /* Utiliza flexbox para alinear los elementos en fila */
+    align-items: center; /* Centra verticalmente los elementos */
     background: #333;
     color: #fff;
-    padding: 10px 0;
-    text-align: center;
+    padding: 10px 20px; /* Ajusta el padding alrededor de los elementos */
+}
+
+/* Estilo para la imagen en el encabezado */
+header img.logo {
+    max-height: 50px; /* Ajusta la altura máxima de la imagen */
+    margin-right: 20px; /* Espacio entre la imagen y el contenido del nav */
+}
+
+/* Estilo para el contenedor de enlaces en el encabezado */
+header nav {
+    display: flex; /* Utiliza flexbox para alinear los enlaces en fila */
+    flex-grow: 1; /* Permite que el contenedor de enlaces se expanda */
+    justify-content: flex-end; /* Alinea los enlaces a la derecha */
 }
 
 /* Estilo para los enlaces en el encabezado */
@@ -32,5 +46,4 @@ main {
     padding: 20px;
     background-color: #fff;
     border-radius: 8px;
-  
 }
