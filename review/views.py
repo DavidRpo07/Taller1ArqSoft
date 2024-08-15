@@ -4,10 +4,33 @@ from .models import Comentario, Profesor
 from .forms import ComentarioForm
 from profesores.models import Profesor
 
-# Create your views here.
+# Create your views here
 def home(request):
-    return render(request, 'home.html')
+    searchNombre = request.GET.get('searchNombre', '')
+    searchMateria = request.GET.get('searchMateria', '')
+    searchDepartamento = request.GET.get('searchDepartamento', '')
 
+    # Inicialmente, selecciona todos los profesores
+    profesores = Profesor.objects.all()
+
+    # Filtra por nombre si se proporciona un valor
+    if searchNombre:
+        profesores = profesores.filter(nombre__icontains=searchNombre)
+    
+    # Filtra por materia si se proporciona un valor
+    if searchMateria:
+        profesores = profesores.filter(materia__icontains=searchMateria)
+    
+    # Filtra por departamento si se proporciona un valor
+    if searchDepartamento:
+        profesores = profesores.filter(departamento__icontains=searchDepartamento)
+
+    return render(request, 'home.html', {
+        'profesores': profesores,
+        'searchNombre': searchNombre,
+        'searchMateria': searchMateria,
+        'searchDepartamento': searchDepartamento
+    })
 
 @login_required
 def agregar_comentario(request, profesor_id):
