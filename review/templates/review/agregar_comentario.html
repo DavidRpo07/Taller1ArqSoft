@@ -10,7 +10,7 @@
 
         {% csrf_token %}
         <div class="form-group mb-3">
-            <label for="rating">Calificación:</label>
+            <h3 for="rating">Calificación:</h3>
             <select class="form-control" name="rating" id="rating">
                 {% for value, label in form.rating.choices %}
                     <option value="{{ value }}">{{ label }}</option>
@@ -18,7 +18,7 @@
             </select>
         </div>
         {{ form.as_p }}
-        <button type="submit">Enviar</button>
+        <button type="submit" class="btn btn-primary">Enviar</button>
     </form>
 </div>
 {% endblock %}

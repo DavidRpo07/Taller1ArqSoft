@@ -5,6 +5,7 @@
 {% block content %}
 <!-- Asegúrate de mantener el enlace a Bootstrap aquí -->
 <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet">
+<link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.8.1/font/bootstrap-icons.css" rel="stylesheet"> <!-- Añade esto para los iconos de estrellas -->
 <div class="container mt-4">
     <h1 class="mb-4">{{ profesor.nombre }}</h1>
     <p><strong>Materia:</strong> {{ profesor.materia }}</p>
@@ -16,7 +17,13 @@
             {% for comentario in comentarios %}
                 <div class="list-group-item">
                     <p><strong>{{ comentario.usuario }}:</strong> {{ comentario.contenido }}</p>
-                    <p><small class="text-muted">{{ comentario.fecha }}</small></p>
+                    <p>
+                        <small class="text-muted">{{ comentario.fecha }}</small><br>
+                        <strong>Rating:</strong>
+                        {% for i in "12345" %}
+                            <span class="bi bi-star{% if i|add:0 > comentario.rating %}-outline{% endif %}"></span>
+                        {% endfor %}
+                    </p>
                 </div>
             {% endfor %}
         </div>

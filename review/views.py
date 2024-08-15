@@ -9,8 +9,6 @@ def home(request):
     return render(request, 'home.html')
 
 
-
-
 @login_required
 def agregar_comentario(request, profesor_id):
     profesor = get_object_or_404(Profesor, pk=profesor_id)
@@ -28,6 +26,8 @@ def agregar_comentario(request, profesor_id):
         'form': form,
         'profesor': profesor
     })
+
+
 def detalle_profesor(request, profesor_id):
     profesor = get_object_or_404(Profesor, pk=profesor_id)
     comentarios = profesor.comentarios.all()
