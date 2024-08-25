@@ -12,12 +12,15 @@
         <div class="form-group mb-3">
             <h3 for="rating">Calificación:</h3>
             <select class="form-control" name="rating" id="rating">
-                {% for value, label in form.rating.choices %}
+                {% for value, label in form.rating.field.choices %}
                     <option value="{{ value }}">{{ label }}</option>
                 {% endfor %}
             </select>
         </div>
-        {{ form.as_p }}
+        <div class="form-group mb-3">
+            <label for="contenido">Comentario:</label>
+            <textarea class="form-control" id="contenido" name="contenido" rows="3">{{ form.contenido.value }}</textarea>
+        </div>
         <button type="submit" class="btn btn-primary">Enviar</button>
     </form>
 </div>
