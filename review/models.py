@@ -9,7 +9,7 @@ class Comentario(models.Model):
     usuario = models.ForeignKey(User, on_delete=models.CASCADE)
     contenido = models.TextField()
     fecha = models.DateTimeField(auto_now_add=True)
-    rating = models.IntegerField(choices=((0, 'Seleccione una'),(1, '1 Star'), (2, '2 Stars'), (3, '3 Stars'), (4, '4 Stars'), (5, '5 Stars')), default=0)
+    rating = models.IntegerField(choices=((0, 'Seleccione una'),(1, '1 Estrella'), (2, '2 Estrellas'), (3, '3 Estrellas'), (4, '4 Estrellas'), (5, '5 Estrellas')), default=0)
 
     def __str__(self):
         return f'Comentario de {self.usuario} sobre {self.profesor}'
