@@ -1,4 +1,3 @@
-<!-- templates/registration/login.html -->
 {% extends "base_generic.html" %}
 
 {% block content %}
@@ -8,4 +7,5 @@
     {{ form.as_p }}
     <button type="submit">Iniciar sesión</button>
 </form>
+<p>¿No tienes cuenta? <a href="{% url 'register' %}">Regístrate</a></p>
 {% endblock %}

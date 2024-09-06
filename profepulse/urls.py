@@ -20,7 +20,8 @@ from profesores import views as profesoresViews
 from django.conf import settings
 from django.conf.urls.static import static
 from django.contrib.auth import views as auth_views
-
+from django.contrib.auth.views import LoginView, LogoutView
+from account import views as accountViews
 
 
 
@@ -31,13 +32,7 @@ urlpatterns = [
     path('profesores/', profesoresViews.lista_profesores),
     path('profesor/<int:profesor_id>/', reviewViews.detalle_profesor, name='detalle_profesor'),
     path('profesor/<int:profesor_id>/comentar/', reviewViews.agregar_comentario, name='agregar_comentario'),
-    path('accounts/login/', auth_views.LoginView.as_view(), name='login'),
-    path('accounts/logout/', auth_views.LogoutView.as_view(), name='logout'),
-    path('accounts/password_change/', auth_views.PasswordChangeView.as_view(), name='password_change'),
-    path('accounts/password_change/done/', auth_views.PasswordChangeDoneView.as_view(), name='password_change_done'),
-    path('accounts/password_reset/', auth_views.PasswordResetView.as_view(), name='password_reset'),
-    path('accounts/password_reset/done/', auth_views.PasswordResetDoneView.as_view(), name='password_reset_done'),
-    path('accounts/reset/<uidb64>/<token>/', auth_views.PasswordResetConfirmView.as_view(), name='password_reset_confirm'),
-    path('accounts/reset/done/', auth_views.PasswordResetCompleteView.as_view(), name='password_reset_complete'),
-    path('accounts/profile/', reviewViews.user_profile, name='profile'),  # Nueva URL para el perfil
+    path('login/', LoginView.as_view(template_name='registro/login.html'), name='login'),
+    path('logout/', LogoutView.as_view(), name='logout'),
+    path('register/', accountViews.register, name='register'),
 ]+ static(settings.STATIC_URL, document_root=settings.STATIC_ROOT)
