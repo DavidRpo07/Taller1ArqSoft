@@ -18,14 +18,27 @@
             <label for="searchMateria" class="form-label">Buscar por Materia:</label>
             <input type="text" class="form-control" name="searchMateria" id="searchMateria" value="{{ searchMateria }}">
         </div>
-        <div class="mb-3">
-            <label for="searchDepartamento" class="form-label">Buscar por Departamento:</label>
-            <input type="text" class="form-control" name="searchDepartamento" id="searchDepartamento" value="{{ searchDepartamento }}">
-        </div>
         <button type="submit" class="btn btn-primary">Buscar</button>
     </form>
 
-    <p class="mt-3">Buscando por: Nombre: {{ searchNombre }}; Materia: {{ searchMateria }}; Departamento: {{ searchDepartamento }}</p>
+    <form method="GET" action="" class="form-inline my-4">
+        <!-- Combo box para seleccionar el criterio de ordenación -->
+        <div class="form-group mr-3">
+            <label for="orden_field" class="mr-2">Ordenar por:</label>
+            <select name="orden_field" id="orden_field" class="form-control">
+                <option value=""> </option>
+                <option value="mayor_rating" {% if orden_field == "mayor_rating" %}selected{% endif %}>Mayor rating</option>
+                <option value="menor_rating" {% if orden_field == "menor_rating" %}selected{% endif %}>Menor rating</option>
+                <option value="mayor_comentarios" {% if orden_field == "mayor_comentarios" %}selected{% endif %}>Mayor cantidad de comentarios</option>
+                <option value="menor_comentarios" {% if orden_field == "menor_comentarios" %}selected{% endif %}>Menor cantidad de comentarios</option>
+            </select>
+        </div>
+    
+        <!-- Botón para enviar el formulario -->
+        <button type="submit" class="btn btn-primary">Ordenar</button>
+    </form>
+
+    <p class="mt-3">Buscando por: {{ searchNombre }}  {{ searchMateria }} </p>
 
     <!-- Tarjetas de Profesores -->
     <div class="row row-cols-1 row-cols-md-3 g-4">
