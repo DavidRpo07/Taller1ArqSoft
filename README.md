@@ -9,6 +9,7 @@
 ## How to run it?
 ### 1. Go to the directory
 ### 2. pip install -r requirements.txt
-### 3. python manage.py migrate
-### 4. python manage.py runserver
+### 3. python manage.py makemigrations
+### 4. python manage.py migrate
+### 5. python manage.py runserver
 ### Open your web browser and go to http://127.0.0.1:8000/
