@@ -5,21 +5,21 @@
 <head>
     <title>{% block title %}Mi Sitio{% endblock %}</title>
     <link rel="stylesheet" type="text/css" href="{% static 'styles.css' %}">
-    {% load static %}
 </head>
 <body>
     <header>
         <img src="{% static 'images/logo_eafit.png' %}" alt="Descripción de la imagen" class="logo">
         <nav>
             <a href="/">Inicio</a>
-            <a href="/profesores/">Profesores</a>
+            <a href="{% url 'lista_profesores' %}">Profesores</a>
             {% if user.is_authenticated %}
-            <form action="{% url 'logout' %}" method="post" style="display:inline;">
-                {% csrf_token %}
-                <button type="submit" class="btn btn-link" style="text-decoration: none; color: white; padding: 0; border: none; background: none;">
-                    Cerrar sesión
-                </button>
-            </form>
+                <a href="{% url 'mis_comentarios' %}">Mis Comentarios</a>
+                <form action="{% url 'logout' %}" method="post" style="display:inline;">
+                    {% csrf_token %}
+                    <button type="submit" class="btn btn-link" style="text-decoration: none; color: white; padding: 0; border: none; background: none;">
+                        Cerrar sesión
+                    </button>
+                </form>
             {% else %}
                 <a href="{% url 'login' %}">Iniciar sesión</a>
             {% endif %}
@@ -33,4 +33,3 @@
     </main>
 </body>
 </html>
-

@@ -7,9 +7,10 @@ from django.dispatch import receiver
 class Comentario(models.Model):
     profesor = models.ForeignKey(Profesor, related_name='comentarios', on_delete=models.CASCADE)
     usuario = models.ForeignKey(User, on_delete=models.CASCADE)
-    contenido = models.TextField()
+    contenido = models.TextField()  # Este es el campo correcto para el contenido del comentario
     fecha = models.DateTimeField(auto_now_add=True)
-    rating = models.IntegerField(choices=((0, 'Seleccione una'),(1, '1 Estrella'), (2, '2 Estrellas'), (3, '3 Estrellas'), (4, '4 Estrellas'), (5, '5 Estrellas')), default=0)
+    rating = models.IntegerField(choices=((0, 'Seleccione una'), (1, '1 Estrella'), (2, '2 Estrellas'),
+                                          (3, '3 Estrellas'), (4, '4 Estrellas'), (5, '5 Estrellas')), default=0)
 
     def __str__(self):
         return f'Comentario de {self.usuario} sobre {self.profesor}'

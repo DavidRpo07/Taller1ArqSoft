@@ -1,0 +1,47 @@
+{% extends 'base_generic.html' %}
+
+{% block title %}Mis Comentarios{% endblock %}
+
+{% block content %}
+<h1>Mis Comentarios</h1>
+
+<!-- Enlace para volver a la lista de profesores -->
+<a href="{% url 'lista_profesores' %}" class="btn btn-secondary mb-3">Volver a Profesores</a>
+
+{% if comentarios %}
+    <table class="table">
+        <thead>
+            <tr>
+                <th>Comentario</th>
+                <th>Profesor</th>
+                <th>Acciones</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for comentario in comentarios %}
+            <tr>
+                <!-- Mostrar el contenido del comentario -->
+                <td>{{ comentario.contenido }}</td>
+                <td>{{ comentario.profesor.nombre }}</td>
+                <td>
+                    <!-- Enlace para editar el comentario -->
+                    <a href="{% url 'edit_review' comentario.id %}" class="btn btn-primary">Editar</a>
+
+                    <!-- Formulario para eliminar el comentario -->
+                    <form method="POST" action="{% url 'delete_own_review' comentario.id %}" style="display:inline;">
+                        {% csrf_token %}
+                        <button type="submit" class="btn btn-danger">Eliminar</button>
+                    </form>
+                </td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+{% else %}
+    <p>No has realizado ningún comentario aún.</p>
+{% endif %}
+
+<!-- Enlace para regresar a la página principal -->
+<a href="/" class="btn btn-secondary mt-3">Volver al Inicio</a>
+
+{% endblock %}
