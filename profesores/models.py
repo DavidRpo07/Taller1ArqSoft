@@ -14,3 +14,10 @@ class Profesor(models.Model):
 
 class UploadCSVForm(forms.Form):
     file = forms.FileField(label='Subir archivo CSV')
+
+
+class ProfesorForm(forms.ModelForm):
+    class Meta:
+        model = Profesor
+        fields = ['nombre', 'departamento', 'materia']
+        labels = {'departamento':'Área'}
