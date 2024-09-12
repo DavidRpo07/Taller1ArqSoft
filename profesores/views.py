@@ -16,9 +16,9 @@ def lista_profesores(request):
     if searchNombre:
         profesores = profesores.filter(nombre__icontains=searchNombre)
     
-    # Filtrar por materia o departamento
+    # Filtrar por materia 
     if searchMateria:
-        profesores = profesores.filter(Q(materia__icontains=searchMateria) | Q(departamento__icontains=searchMateria))
+        profesores = profesores.filter(materia__icontains=searchMateria)
 
     # Aplicar la ordenación según el criterio seleccionado
     if orden_field:
