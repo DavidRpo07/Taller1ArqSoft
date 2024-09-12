@@ -3,6 +3,7 @@ from django.contrib.auth.decorators import login_required, user_passes_test
 from .models import Comentario, Profesor
 from .forms import ComentarioForm
 from django.http import HttpResponseForbidden
+from django.contrib import messages
 
 # Función para verificar si el usuario es administrador
 def is_admin(user):
@@ -78,6 +79,7 @@ def manage_reviews(request):
 def delete_review(request, comentario_id):
     comentario = get_object_or_404(Comentario, id=comentario_id)
     comentario.delete()
+    messages.success(request, 'Comentario eliminado.')
     return redirect('manage_reviews')
 
 # Vista para editar una reseña (solo si es el propietario)
