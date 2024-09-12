@@ -64,10 +64,6 @@ def detalle_profesor(request, profesor_id):
         'comentarios': comentarios
     })
 
-# Perfil del usuario
-@login_required
-def user_profile(request):
-    return render(request, 'review/user_profile.html', {'user': request.user})
 
 # Vista para que los administradores gestionen las reseñas
 @user_passes_test(is_admin)

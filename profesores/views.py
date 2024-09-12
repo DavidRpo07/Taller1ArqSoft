@@ -45,3 +45,4 @@ def detalle_profesor(request, profesor_id):
         'profesor': profesor,
         'comentarios': comentarios
     })
+

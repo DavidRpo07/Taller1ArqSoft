@@ -9,7 +9,7 @@
 <div class="container mt-4">
     <h1 class="mb-4">{{ profesor.nombre }}</h1>
     <p><strong>Materia:</strong> {{ profesor.materia }}</p>
-    <p><strong>Departamento:</strong> {{ profesor.departamento }}</p>
+    <p><strong>Área:</strong> {{ profesor.departamento }}</p>
     {% if profesor.calificacion_media %}
     <p><strong>Calificación Media:</strong></p>
     <p>
@@ -19,6 +19,7 @@
         ({{ profesor.calificacion_media|floatformat:1 }})
     </p>
     {% endif %}
+    <p class="card-text">Cantidad de comentarios: {{ profesor.numcomentarios }}</p>
 
     <h2 class="mt-4">Comentarios</h2>
     {% if comentarios %}

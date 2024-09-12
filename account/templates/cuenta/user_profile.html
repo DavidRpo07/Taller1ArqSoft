@@ -1,0 +1,22 @@
+{% extends "base_generic.html" %}
+
+{% block content %}
+    <main>
+        <section>
+                {% if user.is_staff %}
+                    <!-- Si el usuario es admin -->
+                    <a href="{% url 'manage_reviews' %}">
+                        <button>Eliminar comentarios</button>
+                    </a>
+                    <a href="{% url 'home' %}">
+                        <button>Agregar Profesores</button>
+                    </a>
+                {% else %}
+                    <!-- Si el usuario es normal -->
+                    <a href="{% url 'mis_comentarios' %}">
+                        <button>Ver mis comentarios</button>
+                    </a>
+                {% endif %}
+        </section>
+    </main>
+{% endblock %}
