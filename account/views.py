@@ -1,5 +1,5 @@
 from django.shortcuts import render
-
+from django.contrib.auth.decorators import login_required, user_passes_test
 # Create your views here.
 from django.shortcuts import render, redirect
 from .forms import FormularioRegistro
@@ -13,3 +13,8 @@ def register(request):
     else:
         form = FormularioRegistro()
     return render(request, 'registro/register.html', {'form': form})
+
+# Perfil del usuario
+@login_required
+def user_profile(request):
+    return render(request, 'cuenta/user_profile.html', {'user': request.user})

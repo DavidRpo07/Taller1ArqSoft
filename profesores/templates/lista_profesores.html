@@ -51,7 +51,7 @@
                             {{ profesor.nombre }}
                         </a>
                     </h5>
-                    <p class="card-text">Departamento: {{ profesor.departamento }}</p>
+                    <p class="card-text">Área: {{ profesor.departamento }}</p>
                     <p class="card-text">Materia: {{ profesor.materia }}</p>
                     {% if profesor.calificacion_media %}
                     <p class="card-text">Calificación Media:
@@ -63,6 +63,7 @@
                     {% else %}
                     <p class="card-text">Calificación Media: Sin calificaciones aún.</p>
                     {% endif %}
+                    <p class="card-text">Cantidad de comentarios: {{ profesor.numcomentarios }}</p>
                 </div>
             </div>
         </div>
