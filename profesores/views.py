@@ -47,7 +47,6 @@ def detalle_profesor(request, profesor_id):
     })
 
 def upload_csv(request):
-    # Inicializamos ambos formularios
     form = UploadCSVForm()
     profesor_form = ProfesorForm()
 
@@ -58,6 +57,9 @@ def upload_csv(request):
                 csv_file = request.FILES['file']
                 decoded_file = csv_file.read().decode('utf-8').splitlines()
                 reader = csv.reader(decoded_file)
+
+                next(reader)
+
                 for row in reader:
                     Profesor.objects.create(
                         nombre=row[0], 
@@ -75,7 +77,6 @@ def upload_csv(request):
                 messages.success(request, 'Profesor agregado correctamente.')
                 return redirect('agregar_profesor')
 
-    # Aseguramos que ambos formularios siempre estén en el contexto
     return render(request, 'profesores/agregar_profesor.html', {
         'form': form, 
         'profesor_form': profesor_form

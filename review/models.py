@@ -21,6 +21,8 @@ def actualizar_calificacion_media(sender, instance, **kwargs):
     comentarios = Comentario.objects.filter(profesor=profesor)
     promedio = comentarios.aggregate(models.Avg('rating'))['rating__avg']
     profesor.calificacion_media = promedio if promedio is not None else 0.0
+    cantidad_de_comentarios = comentarios.count()
+    profesor.numcomentarios = cantidad_de_comentarios
     profesor.save()
 
 @receiver(post_delete, sender=Comentario)
@@ -29,4 +31,6 @@ def actualizar_calificacion_media_eliminar(sender, instance, **kwargs):
     comentarios = Comentario.objects.filter(profesor=profesor)
     promedio = comentarios.aggregate(models.Avg('rating'))['rating__avg']
     profesor.calificacion_media = promedio if promedio is not None else 0.0
+    cantidad_de_comentarios = comentarios.count()
+    profesor.numcomentarios = cantidad_de_comentarios
     profesor.save()
