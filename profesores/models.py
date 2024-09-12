@@ -1,4 +1,5 @@
 from django.db import models
+from django import forms
 
 # Create your models here.
 class Profesor(models.Model):
@@ -10,3 +11,6 @@ class Profesor(models.Model):
 
     def __str__(self):
         return self.nombre
+
+class UploadCSVForm(forms.Form):
+    file = forms.FileField(label='Subir archivo CSV')
