@@ -18,6 +18,8 @@ urlpatterns = [
     path('mis_comentarios/', reviewViews.mis_comentarios, name='mis_comentarios'),
     path('edit_review/<int:comentario_id>/', reviewViews.edit_review, name='edit_review'),
     path('delete_own_review/<int:comentario_id>/', reviewViews.delete_own_review, name='delete_own_review'),
+    path('delete_review/<int:comentario_id>/', reviewViews.delete_review, name='delete_review'),
+    path('review/manage_reviews/', reviewViews.manage_reviews, name='manage_reviews'),
 
     # Rutas de autenticación
     path('login/', LoginView.as_view(template_name='registro/login.html'), name='login'),

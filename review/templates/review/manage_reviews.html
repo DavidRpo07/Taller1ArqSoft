@@ -12,7 +12,7 @@
         {% for comentario in comentarios %}
         <tr>
             <td>{{ comentario.usuario.username }}</td>
-            <td>{{ comentario.texto }}</td>
+            <td>{{ comentario.contenido }}</td>
             <td>
                 <form method="POST" action="{% url 'delete_review' comentario.id %}">
                     {% csrf_token %}

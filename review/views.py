@@ -123,3 +123,4 @@ def mis_comentarios(request):
     comentarios = Comentario.objects.filter(usuario=request.user)
     return render(request, 'review/mis_comentarios.html', {'comentarios': comentarios})
 
+

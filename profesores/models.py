@@ -6,6 +6,7 @@ class Profesor(models.Model):
     departamento = models.CharField(max_length=100)
     materia = models.CharField(max_length=100)
     calificacion_media = models.FloatField(default=0.0)  # Inicialmente 0.0
+    numcomentarios = models.IntegerField(default=0)
 
     def __str__(self):
         return self.nombre

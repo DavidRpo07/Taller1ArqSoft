@@ -26,6 +26,10 @@ def lista_profesores(request):
             profesores = profesores.order_by('-calificacion_media')  # Ordena por mayor rating (descendente)
         elif orden_field == 'menor_rating':
             profesores = profesores.order_by('calificacion_media')   # Ordena por menor rating (ascendente)
+        elif orden_field == 'mayor_comentarios':
+            profesores = profesores.order_by('-numcomentarios')
+        elif orden_field == 'menor_comentarios':
+            profesores = profesores.order_by('numcomentarios')
 
     return render(request, 'lista_profesores.html', {
         'profesores': profesores,

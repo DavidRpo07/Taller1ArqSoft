@@ -21,4 +21,6 @@ def actualizar_calificacion_media(sender, instance, **kwargs):
     comentarios = Comentario.objects.filter(profesor=profesor)
     promedio = comentarios.aggregate(models.Avg('rating'))['rating__avg']
     profesor.calificacion_media = promedio
+    cantidad_comentarios = comentarios.count()
+    profesor.numcomentarios = cantidad_comentarios
     profesor.save()
