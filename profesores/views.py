@@ -1,33 +1,41 @@
 from django.shortcuts import render
 from .models import Profesor
 from django.shortcuts import render, get_object_or_404
+from django.db.models import Q
 
 
 def lista_profesores(request):
     searchNombre = request.GET.get('searchNombre', '')
     searchMateria = request.GET.get('searchMateria', '')
-    searchDepartamento = request.GET.get('searchDepartamento', '')
+    orden_field = request.GET.get('orden_field', '')
 
     # Inicialmente, selecciona todos los profesores
     profesores = Profesor.objects.all()
 
-    # Filtra por nombre si se proporciona un valor
+    # Filtrar por nombre
     if searchNombre:
         profesores = profesores.filter(nombre__icontains=searchNombre)
     
-    # Filtra por materia si se proporciona un valor
+    # Filtrar por materia o departamento
     if searchMateria:
-        profesores = profesores.filter(materia__icontains=searchMateria)
-    
-    # Filtra por departamento si se proporciona un valor
-    if searchDepartamento:
-        profesores = profesores.filter(departamento__icontains=searchDepartamento)
+        profesores = profesores.filter(Q(materia__icontains=searchMateria) | Q(departamento__icontains=searchMateria))
+
+    # Aplicar la ordenación según el criterio seleccionado
+    if orden_field:
+        if orden_field == 'mayor_rating':
+            profesores = profesores.order_by('-calificacion_media')  # Ordena por mayor rating (descendente)
+        elif orden_field == 'menor_rating':
+            profesores = profesores.order_by('calificacion_media')   # Ordena por menor rating (ascendente)
+        elif orden_field == 'mayor_comentarios':
+            profesores = profesores.order_by('-numcomentarios')
+        elif orden_field == 'menor_comentarios':
+            profesores = profesores.order_by('numcomentarios')
 
     return render(request, 'lista_profesores.html', {
         'profesores': profesores,
         'searchNombre': searchNombre,
         'searchMateria': searchMateria,
-        'searchDepartamento': searchDepartamento
+        'orden_field': orden_field
     })
 
 def detalle_profesor(request, profesor_id):

@@ -1,0 +1,25 @@
+<!-- manage_reviews.html -->
+<h1>Gestionar Reseñas</h1>
+<table class="table">
+    <thead>
+        <tr>
+            <th>Usuario</th>
+            <th>Comentario</th>
+            <th>Acciones</th>
+        </tr>
+    </thead>
+    <tbody>
+        {% for comentario in comentarios %}
+        <tr>
+            <td>{{ comentario.usuario.username }}</td>
+            <td>{{ comentario.contenido }}</td>
+            <td>
+                <form method="POST" action="{% url 'delete_review' comentario.id %}">
+                    {% csrf_token %}
+                    <button type="submit" class="btn btn-danger">Eliminar</button>
+                </form>
+            </td>
+        </tr>
+        {% endfor %}
+    </tbody>
+</table>

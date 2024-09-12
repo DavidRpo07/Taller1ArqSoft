@@ -5,6 +5,7 @@
 {% block content %}
 <!-- Asegúrate de mantener el enlace a Bootstrap aquí -->
 <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet">
+<link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.8.1/font/bootstrap-icons.css" rel="stylesheet"> <!-- Añade esto para los iconos de estrellas -->
 
 <div class="container">
     <!-- Formulario de búsqueda -->
@@ -17,14 +18,27 @@
             <label for="searchMateria" class="form-label">Buscar por Materia:</label>
             <input type="text" class="form-control" name="searchMateria" id="searchMateria" value="{{ searchMateria }}">
         </div>
-        <div class="mb-3">
-            <label for="searchDepartamento" class="form-label">Buscar por Departamento:</label>
-            <input type="text" class="form-control" name="searchDepartamento" id="searchDepartamento" value="{{ searchDepartamento }}">
-        </div>
         <button type="submit" class="btn btn-primary">Buscar</button>
     </form>
 
-    <p class="mt-3">Buscando por: Nombre: {{ searchNombre }}; Materia: {{ searchMateria }}; Departamento: {{ searchDepartamento }}</p>
+    <form method="GET" action="" class="form-inline my-4">
+        <!-- Combo box para seleccionar el criterio de ordenación -->
+        <div class="form-group mr-3">
+            <label for="orden_field" class="mr-2">Ordenar por:</label>
+            <select name="orden_field" id="orden_field" class="form-control">
+                <option value=""> </option>
+                <option value="mayor_rating" {% if orden_field == "mayor_rating" %}selected{% endif %}>Mayor rating</option>
+                <option value="menor_rating" {% if orden_field == "menor_rating" %}selected{% endif %}>Menor rating</option>
+                <option value="mayor_comentarios" {% if orden_field == "mayor_comentarios" %}selected{% endif %}>Mayor cantidad de comentarios</option>
+                <option value="menor_comentarios" {% if orden_field == "menor_comentarios" %}selected{% endif %}>Menor cantidad de comentarios</option>
+            </select>
+        </div>
+    
+        <!-- Botón para enviar el formulario -->
+        <button type="submit" class="btn btn-primary">Ordenar</button>
+    </form>
+
+    <p class="mt-3">Buscando por: {{ searchNombre }}  {{ searchMateria }} </p>
 
     <!-- Tarjetas de Profesores -->
     <div class="row row-cols-1 row-cols-md-3 g-4">
@@ -37,11 +51,19 @@
                             {{ profesor.nombre }}
                         </a>
                     </h5>
-                    <p class="card-text">Departamento: {{ profesor.departamento }}</p>
+                    <p class="card-text">Área: {{ profesor.departamento }}</p>
                     <p class="card-text">Materia: {{ profesor.materia }}</p>
                     {% if profesor.calificacion_media %}
-                    <p class="card-text">Calificación Media: {{ profesor.calificacion_media }}</p>
+                    <p class="card-text">Calificación Media:
+                        {% for i in "12345" %}
+                            <span class="bi bi-star{% if i|add:0 > profesor.calificacion_media %}-outline{% endif %}"></span>
+                        {% endfor %}
+                        ({{ profesor.calificacion_media|floatformat:1 }})
+                    </p>
+                    {% else %}
+                    <p class="card-text">Calificación Media: Sin calificaciones aún.</p>
                     {% endif %}
+                    <p class="card-text">Cantidad de comentarios: {{ profesor.numcomentarios }}</p>
                 </div>
             </div>
         </div>
