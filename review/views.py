@@ -4,10 +4,28 @@ from .models import Comentario, Profesor
 from .forms import ComentarioForm
 from django.http import HttpResponseForbidden
 from django.contrib import messages
+import openai  
+from django.conf import settings
+
+# Configura la clave API de OpenAI
+openai.api_key = settings.OPENAI_API_KEY
 
 # Función para verificar si el usuario es administrador
 def is_admin(user):
     return user.is_staff
+
+# Función para revisar el comentario usando OpenAI
+def revisar_comentario_por_ia(contenido):
+    response = openai.ChatCompletion.create(
+        model="gpt-3.5-turbo",
+        messages=[{"role": "system", "content": "Revisa este comentario y determina si es apropiado."},
+                  {"role": "user", "content": contenido}]
+    )
+    resultado = response.choices[0].message.content.strip()
+    if resultado.lower() == 'aprobado':
+        return True
+    else:
+        return False
 
 # Home con búsqueda de profesores
 def home(request):
@@ -47,8 +65,16 @@ def agregar_comentario(request, profesor_id):
             comentario = form.save(commit=False)
             comentario.profesor = profesor
             comentario.usuario = request.user
-            comentario.save()
-            return redirect('detalle_profesor', profesor_id=profesor.id)
+            
+            # Revisamos el comentario con la IA
+            aprobado = revisar_comentario_por_ia(comentario.contenido)
+            if aprobado:
+                comentario.aprobado_por_ia = True
+                comentario.save()
+                messages.success(request, 'Tu comentario ha sido aprobado y publicado.')
+                return redirect('detalle_profesor', profesor_id=profesor.id)
+            else:
+                form.add_error(None, "Tu comentario ha sido rechazado por no cumplir con las normas.")
     else:
         form = ComentarioForm()
     return render(request, 'review/agregar_comentario.html', {
@@ -56,15 +82,14 @@ def agregar_comentario(request, profesor_id):
         'profesor': profesor
     })
 
-# Detalle de un profesor con sus comentarios
+# Detalle de un profesor con sus comentarios aprobados
 def detalle_profesor(request, profesor_id):
     profesor = get_object_or_404(Profesor, pk=profesor_id)
-    comentarios = profesor.comentarios.all()
+    comentarios = profesor.comentarios.filter(aprobado_por_ia=True)  # Solo mostrar comentarios aprobados
     return render(request, 'profesores/detalle_profesor.html', {
         'profesor': profesor,
         'comentarios': comentarios
     })
-
 
 # Vista para que los administradores gestionen las reseñas
 @user_passes_test(is_admin)
@@ -103,7 +128,6 @@ def edit_review(request, comentario_id):
     
     return render(request, 'review/edit_review.html', {'form': form, 'comentario': comentario})
 
-
 # Vista para eliminar una reseña (solo si es el propietario)
 @login_required
 def delete_own_review(request, comentario_id):
@@ -120,5 +144,3 @@ def mis_comentarios(request):
     # Filtrar comentarios que pertenecen al usuario autenticado
     comentarios = Comentario.objects.filter(usuario=request.user)
     return render(request, 'review/mis_comentarios.html', {'comentarios': comentarios})
-
-

@@ -1,8 +1,26 @@
-from .models import Profesor, UploadCSVForm, ProfesorForm
 from django.shortcuts import render, get_object_or_404, redirect
 from django.db.models import Q
 import csv
 from django.contrib import messages
+from review.models import Comentario
+from .models import Profesor, UploadCSVForm, ProfesorForm
+import openai
+from django.conf import settings
+
+# Configuración de la API de OpenAI
+openai.api_key = settings.OPENAI_API_KEY
+
+# Función para revisar el comentario usando OpenAI
+def revisar_comentario_por_ia(contenido):
+    response = openai.ChatCompletion.create(
+        model="gpt-3.5-turbo",
+        messages=[
+            {"role": "system", "content": "Revisa este comentario y determina si es apropiado."},
+            {"role": "user", "content": contenido}
+        ]
+    )
+    resultado = response.choices[0].message.content.strip()
+    return resultado.lower() == 'aprobado'
 
 def lista_profesores(request):
     searchNombre = request.GET.get('searchNombre', '')
@@ -40,7 +58,9 @@ def lista_profesores(request):
 
 def detalle_profesor(request, profesor_id):
     profesor = get_object_or_404(Profesor, pk=profesor_id)
-    comentarios = profesor.comentarios.all()
+    # Filtrar los comentarios del profesor para mostrar solo los aprobados por la IA
+    comentarios = profesor.comentarios.filter(aprobado_por_ia=True)
+    
     return render(request, 'profesores/detalle_profesor.html', {
         'profesor': profesor,
         'comentarios': comentarios
