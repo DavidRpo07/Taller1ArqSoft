@@ -14,8 +14,11 @@
         <thead>
             <tr>
                 <th>Comentario</th>
+                <th>Calificación</th>
                 <th>Profesor</th>
+                {% if comentario.usuario == request.user or is_admin %}
                 <th>Acciones</th>
+                {% endif %}
             </tr>
         </thead>
         <tbody>
@@ -23,16 +26,27 @@
             <tr>
                 <!-- Mostrar el contenido del comentario -->
                 <td>{{ comentario.contenido }}</td>
+                <!-- Mostrar la calificación del comentario -->
+                <td>{{ comentario.rating }}</td>
                 <td>{{ comentario.profesor.nombre }}</td>
                 <td>
-                    <!-- Enlace para editar el comentario -->
-                    <a href="{% url 'edit_review' comentario.id %}" class="btn btn-primary">Editar</a>
 
+                    <!-- Mostrar el botón de editar solo si el usuario es el propietario del comentario o es admin -->
+                    {% if comentario.usuario == request.user or is_admin %}
+                        <a href="{% url 'edit_review' comentario.id %}" class="btn btn-primary">Editar</a>
+                    {% endif %}
                     <!-- Formulario para eliminar el comentario -->
-                    <form method="POST" action="{% url 'delete_own_review' comentario.id %}" style="display:inline;">
-                        {% csrf_token %}
-                        <button type="submit" class="btn btn-danger">Eliminar</button>
-                    </form>
+                    {% if is_admin %}
+                        <form method="POST" action="{% url 'delete_review' comentario.id %}" style="display:inline;">
+                            {% csrf_token %}
+                            <button type="submit" class="btn btn-danger">Eliminar</button>
+                        </form>
+                    {% elif comentario.usuario == request.user %}
+                        <form method="POST" action="{% url 'delete_own_review' comentario.id %}" style="display:inline;">
+                            {% csrf_token %}
+                            <button type="submit" class="btn btn-danger">Eliminar</button>
+                        </form>
+                    {% endif %}
                 </td>
             </tr>
             {% endfor %}

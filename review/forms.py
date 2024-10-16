@@ -2,9 +2,10 @@ from django import forms
 from .models import Comentario
 
 class ComentarioForm(forms.ModelForm):
+    anonimo = forms.BooleanField(required=False)
     class Meta:
         model = Comentario
-        fields = ['contenido', 'rating']
+        fields = ['contenido', 'rating','anonimo']
 
 # Intentar que si escogen 0 no deje
     '''def clean_rating(self):

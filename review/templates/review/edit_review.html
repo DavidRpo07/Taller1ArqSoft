@@ -13,6 +13,6 @@
 </form>
 
 <!-- Enlace para regresar a "Mis Comentarios" -->
-<a href="{% url 'mis_comentarios' %}" class="btn btn-secondary mt-3">Volver a Mis Comentarios</a>
+<a href="{% url 'mis_comentarios' usuario.id %}" class="btn btn-secondary mt-3">Volver a Mis Comentarios</a>
 
 {% endblock %}
