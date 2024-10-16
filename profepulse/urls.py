@@ -16,6 +16,8 @@ urlpatterns = [
     path('profesor/<int:profesor_id>/comentar/', reviewViews.agregar_comentario, name='agregar_comentario'),
     path('agregarprofesor/', profesoresViews.upload_csv, name='agregar_profesor'),
     path('profile/<int:user_id>/', accountViews.user_profile, name='user_profile'),
+    path('eliminarprofesor/', profesoresViews.manage_profesor, name='manage_profesor'),
+    path('eliminarprofesor/<int:profesor_id>/', profesoresViews.delete_profesor, name='eliminar_profesor'),
 
     
     # Nuevas rutas para "Mis Comentarios", editar y eliminar reseñas

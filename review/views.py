@@ -72,11 +72,7 @@ def agregar_comentario(request, profesor_id):
     profesor = get_object_or_404(Profesor, pk=profesor_id)
     
     # Obtener el UserProfile del usuario actual
-    try:
-        user_profile = UserProfile.objects.get(user=request.user)
-    except UserProfile.DoesNotExist:
-        # Opcional: Crear un UserProfile si no existe
-        user_profile = UserProfile.objects.create(user=request.user)
+    user_profile = UserProfile.objects.get_or_create(user=request.user)[0]
     
     # Verificar si el usuario está suspendido
     if user_profile.is_suspended:
@@ -88,13 +84,11 @@ def agregar_comentario(request, profesor_id):
         if form.is_valid():
             comentario = form.save(commit=False)
             comentario.profesor = profesor
-            comentario.usuario = request.user  # Asigna el usuario autenticado
+            comentario.usuario = request.user  # Siempre asignar el usuario
 
             # Revisar si el comentario es anónimo
             es_anonimo = request.POST.get('anonimo') == 'on'
-            if es_anonimo:
-                comentario.usuario = None  # No asignar usuario si es anónimo
-                comentario.anonimo = True  # Marcar como anónimo
+            comentario.anonimo = es_anonimo  # Marcar como anónimo
             
             # Revisamos el comentario con la IA
             aprobado = revisar_comentario_por_ia(comentario.contenido)
@@ -112,6 +106,7 @@ def agregar_comentario(request, profesor_id):
         'form': form,
         'profesor': profesor
     })
+
 
 
 # Detalle de un profesor con sus comentarios aprobados

@@ -5,7 +5,7 @@ class ComentarioForm(forms.ModelForm):
     anonimo = forms.BooleanField(required=False)
     class Meta:
         model = Comentario
-        fields = ['contenido', 'rating','anonimo']
+        fields = ['contenido', 'rating','anonimo', 'fecha']
 
 # Intentar que si escogen 0 no deje
     '''def clean_rating(self):

@@ -16,7 +16,8 @@ from dotenv import load_dotenv  # Importar la función load_dotenv
 
 
 # Cargar las variables de entorno desde el archivo .env
-load_dotenv('/Users/david/ProfePulse/keys.env')
+load_dotenv('D:\\!Programacion\\VSCode\\Universidad\\Python\\Semestre4\\Proyecto1\\Proyecto\\ProfePulseProject\\keys.env')
+
 
 # Obtener la clave API de las variables de entorno
 OPENAI_API_KEY = os.environ.get('OPENAI_API_KEY')

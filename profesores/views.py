@@ -1,12 +1,19 @@
 from django.shortcuts import render, get_object_or_404, redirect
+from django.contrib.auth.decorators import login_required, user_passes_test
 from django.db.models import Q
 import csv
 from django.contrib import messages
 from review.models import Comentario
 from .models import Profesor, UploadCSVForm, ProfesorForm
 from django.conf import settings
+from django.http import HttpResponseForbidden
+from django.contrib import messages
+from account.models import UserProfile
+from django.contrib.auth.models import User
 
 
+def is_admin(user):
+    return user.is_staff
 
 def lista_profesores(request):
     searchNombre = request.GET.get('searchNombre', '')
@@ -87,3 +94,17 @@ def upload_csv(request):
         'form': form, 
         'profesor_form': profesor_form
     })
+
+@user_passes_test(is_admin)
+def manage_profesor(request):
+    profesores = Profesor.objects.all()  # Mostrar todas las reseñas
+    return render(request, 'profesores/eliminar_profesor.html', {
+        'profesores': profesores
+    })
+
+@user_passes_test(is_admin)
+def delete_profesor(request, profesor_id):
+    profesor = get_object_or_404(Profesor, id=profesor_id)
+    profesor.delete()
+    messages.success(request, 'Profesor eliminado.')
+    return redirect('manage_profesor')

@@ -37,6 +37,14 @@
                             </select>
                         </div>
                         <div class="mb-3">
+                            <label for="fecha" class="form-label"><strong>Semestre:</strong></label>
+                            <select class="form-select" name="fecha" id="fecha" required>
+                                {% for value, label in form.fecha.field.choices %}
+                                    <option value="{{ value }}" {% if form.fecha.value == value|stringformat:"s" %}selected{% endif %}>{{ label }}</option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                        <div class="mb-3">
                             <label for="contenido" class="form-label"><strong>Comentario:</strong></label>
                             <textarea class="form-control" id="contenido" name="contenido" rows="4" required>{{ form.contenido.value }}</textarea>
                         </div>

@@ -6,10 +6,20 @@ from django.dispatch import receiver
 
 
 class Comentario(models.Model):
+    SEMESTRES = [
+        ('2024-2', '2024-2'),
+        ('2024-1', '2024-1'),
+        ('2023-2', '2023-2'),
+        ('2023-1', '2023-1'),
+        ('2022-2', '2022-2'),
+        ('2022-1', '2022-1'),
+        ('2021-2', '2021-2'),
+        ('2021-1', '2021-1'),
+    ]
     profesor = models.ForeignKey(Profesor, related_name='comentarios', on_delete=models.CASCADE)
     usuario = models.ForeignKey(User, on_delete=models.CASCADE)
     contenido = models.TextField() 
-    fecha = models.DateTimeField(auto_now_add=True)
+    fecha = models.CharField(max_length=7, choices=SEMESTRES, default='2024-2')
     rating = models.IntegerField(choices=((0, 'Seleccione una'), (1, '1 Estrella'), (2, '2 Estrellas'),
                                           (3, '3 Estrellas'), (4, '4 Estrellas'), (5, '5 Estrellas')), default=0)
     aprobado_por_ia = models.BooleanField(default=False) 
