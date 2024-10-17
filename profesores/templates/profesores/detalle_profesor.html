@@ -25,7 +25,19 @@
 
 
     <p class="card-text">Cantidad de comentarios: {{ profesor.numcomentarios }}</p>
-
+    {% if messages %}
+    <div class="mb-3">
+        {% for message in messages %}
+            <!-- Estilización del mensaje de error para cuenta suspendida -->
+            <div class="alert alert-{{ message.tags }} {% if message.tags == 'error' %}alert-danger border border-danger text-center{% endif %} p-4">
+                <h5 class="alert-heading">
+                    {% if message.tags == 'error' %}⚠ Atención{% endif %}
+                </h5>
+                <p class="fs-5">{{ message }}</p>
+            </div>
+        {% endfor %}
+    </div>
+    {% endif %}
     <!-- Sección de la gráfica -->
     <h2 class="mt-4">Distribución de Comentarios por Calificación</h2>
     <canvas id="ratingChart" width="400" height="200"></canvas>
