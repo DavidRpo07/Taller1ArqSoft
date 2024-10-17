@@ -26,6 +26,7 @@ urlpatterns = [
     path('delete_own_review/<int:comentario_id>/', reviewViews.delete_own_review, name='delete_own_review'),
     path('delete_review/<int:comentario_id>/', reviewViews.delete_review, name='delete_review'),
     path('review/manage_reviews/', reviewViews.manage_reviews, name='manage_reviews'),
+    path('estadisticas', reviewViews.estadisticas, name='estadisticas'),
 
     # Rutas de autenticación
     path('login/', LoginView.as_view(template_name='registro/login.html'), name='login'),

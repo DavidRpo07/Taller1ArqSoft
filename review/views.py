@@ -9,6 +9,7 @@ from openai import OpenAI
 from django.conf import settings
 from account.models import UserProfile
 from django.contrib.auth.models import User
+from django.db.models import Avg
 
 # Inicializar el cliente de OpenAI
 client = OpenAI(api_key=settings.OPENAI_API_KEY)
@@ -178,3 +179,29 @@ def mis_comentarios(request, user_id):
     comentarios = Comentario.objects.filter(usuario=usuario).order_by('-fecha')
 
     return render(request, 'review/mis_comentarios.html', {'comentarios': comentarios, 'usuario': usuario, 'is_admin': is_admin})
+
+def estadisticas(request):
+    profesores = Profesor.objects.all()  # Obtener todos los profesores para el selector
+    profesor_seleccionado = None
+    promedios_por_semestre = {}
+
+    if request.method == 'POST':
+        profesor_id = request.POST.get('profesor')  # Obtener el ID del profesor seleccionado
+
+        if profesor_id:
+            profesor_seleccionado = Profesor.objects.get(id=profesor_id)
+
+            # Obtener el promedio de rating por cada semestre del profesor seleccionado
+            promedios_por_semestre = (Comentario.objects
+                                      .filter(profesor=profesor_seleccionado)
+                                      .values('fecha')
+                                      .annotate(promedio_rating=Avg('rating'))
+                                      .order_by('fecha'))
+
+            promedios_por_semestre = list(promedios_por_semestre)
+
+    return render(request, 'statistics/estadisticas.html', {
+        'profesores': profesores,
+        'profesor_seleccionado': profesor_seleccionado,
+        'promedios_por_semestre': promedios_por_semestre
+    })

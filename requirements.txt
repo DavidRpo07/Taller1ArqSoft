@@ -2,3 +2,5 @@ django
 Pillow
 openai
 python-dotenv
+matplotlib
+bokeh

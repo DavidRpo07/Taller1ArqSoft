@@ -3,13 +3,24 @@ from django.contrib.auth.decorators import login_required, user_passes_test
 from django.db.models import Q
 import csv
 from django.contrib import messages
-from review.models import Comentario
 from .models import Profesor, UploadCSVForm, ProfesorForm
 from django.conf import settings
 from django.http import HttpResponseForbidden
 from django.contrib import messages
 from account.models import UserProfile
 from django.contrib.auth.models import User
+import matplotlib.pyplot as plt
+import matplotlib
+matplotlib.use('Agg')
+import io 
+from io import BytesIO
+import base64
+import numpy as np
+import os
+from bokeh.plotting import figure
+from bokeh.embed import components
+from collections import Counter
+from review.models import Comentario
 
 
 def is_admin(user):
@@ -49,15 +60,79 @@ def lista_profesores(request):
         'orden_field': orden_field
     })
 
+'''def detalle_profesor(request, profesor_id):
+    profesor = get_object_or_404(Profesor, pk=profesor_id)
+    # Filtrar los comentarios aprobados por IA
+    comentarios = profesor.comentarios.filter(aprobado_por_ia=True)
+
+    # Contar la cantidad de comentarios por cada rating
+    ratings = [1, 2, 3, 4, 5]
+    frecuencia = [comentarios.filter(rating=rating).count() for rating in ratings]
+
+    # Crear la gráfica de barras
+    plt.figure(figsize=(6, 4))
+    plt.bar(ratings, frecuencia, color='skyblue')
+    plt.xlabel('Rating')
+    plt.ylabel('Cantidad de Comentarios')
+    plt.title(f'Distribución de Comentarios por Rating para {profesor.nombre}')
+    plt.xticks(ratings)
+    plt.tight_layout()
+
+    # Guardar la gráfica en un buffer
+    buffer = BytesIO()
+    plt.savefig(buffer, format='png')
+    buffer.seek(0)
+    plt.cose()
+    # Convertir la imagen a base64 para incrustarla en el HTML
+    image_base64 = base64.b64encode(buffer.getvalue()).decode('utf-8')
+    buffer.close()
+
+    # Renderizar la vista con la gráfica incluida en el contexto
+    return render(request, 'profesores/detalle_profesor.html', {
+        'profesor': profesor,
+        'comentarios': comentarios,
+        'grafica': image_base64  # Enviar la imagen al template
+    })'''
+'''def detalle_profesor(request, profesor_id):
+    profesor = get_object_or_404(Profesor, pk=profesor_id)
+    comentarios = profesor.comentarios.filter(aprobado_por_ia=True)  # Solo mostrar comentarios aprobados
+
+    ratings = [1, 2, 3, 4, 5]
+    frecuencia = [comentarios.filter(rating=rating).count() for rating in ratings]
+
+    plot = figure(height=350,
+                x_axis_label="Rating",
+                y_axis_label="Cantidad Comentarios",
+                background_fill_alpha=0,
+                border_fill_alpha=0,
+                tools="pan,wheel_zoom,box_zoom,save,reset")
+    bars = plot.vbar(x=ratings, top=frecuencia, width=0.9)
+    graph_script, graph_div = components(plot)
+    context = {"graph_script": graph_script,
+                "graph_div": graph_div}
+
+    return render(request, 'profesores/detalle_profesor.html', {
+        'profesor': profesor,
+        'comentarios': comentarios,
+        'context': context
+    })'''
+
 def detalle_profesor(request, profesor_id):
     profesor = get_object_or_404(Profesor, pk=profesor_id)
     # Filtrar los comentarios del profesor para mostrar solo los aprobados por la IA
-    comentarios = profesor.comentarios.filter(aprobado_por_ia=True)
-    
+    #comentarios =  Comentario.objects.filter(profesor=profesor)
+    comentarios = Comentario.objects.filter(profesor=profesor, aprobado_por_ia=True)
+    # Contar comentarios por rating
+    ratings = [comentario.rating for comentario in comentarios]
+    ratings_data = dict(Counter(ratings))  # Contador de ratings
+
+    # Asegurar que todas las calificaciones de 1 a 5 tengan un valor, incluso si no hay comentarios con esa calificación
     return render(request, 'profesores/detalle_profesor.html', {
         'profesor': profesor,
-        'comentarios': comentarios
+        'comentarios': comentarios,
+        'ratings_data': ratings_data  # Pasar los datos al template
     })
+
 
 def upload_csv(request):
     form = UploadCSVForm()
