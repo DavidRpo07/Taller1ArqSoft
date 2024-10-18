@@ -29,10 +29,14 @@
             <td>{{ profesor.nombre }}</td>
             <td>{{ profesor.materia }}</td>
             <td>
-                <form method="POST" action="{% url 'eliminar_profesor' profesor.id %}">
+                <!-- Botón de editar -->
+                <a href="{% url 'editar_profesor' profesor.id %}" class="btn btn-primary">Editar</a>
+                <!-- Botón de eliminar -->
+                <form method="POST" action="{% url 'eliminar_profesor' profesor.id %}" style="display:inline;">
                     {% csrf_token %}
                     <button type="submit" class="btn btn-danger">Eliminar</button>
                 </form>
+                
             </td>
         </tr>
         {% endfor %}

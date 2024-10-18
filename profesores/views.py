@@ -17,8 +17,8 @@ from io import BytesIO
 import base64
 import numpy as np
 import os
-from bokeh.plotting import figure
-from bokeh.embed import components
+#from bokeh.plotting import figure
+#from bokeh.embed import components
 from collections import Counter
 from review.models import Comentario
 
@@ -183,3 +183,24 @@ def delete_profesor(request, profesor_id):
     profesor.delete()
     messages.success(request, 'Profesor eliminado.')
     return redirect('manage_profesor')
+
+@user_passes_test(is_admin)
+def edit_profesor(request, profesor_id):
+    # Obtener el profesor por ID, o devolver un 404 si no existe
+    profesor = get_object_or_404(Profesor, id=profesor_id)
+    
+    # Si el formulario se envía (POST), procesamos los datos
+    if request.method == 'POST':
+        profesor_form = ProfesorForm(request.POST, instance=profesor)
+        if profesor_form.is_valid():
+            profesor_form.save()
+            messages.success(request, 'Profesor editado correctamente.')
+            return redirect('manage_profesor')  # Redirigir a una vista de lista de profesores o a donde prefieras
+    else:
+        # Si es GET, cargamos el formulario con los datos actuales del profesor
+        profesor_form = ProfesorForm(instance=profesor)
+    
+    return render(request, 'profesores/editar_profesor.html', {
+        'profesor_form': profesor_form,
+        'profesor': profesor  # Pasamos el objeto profesor por si quieres mostrarlo en la plantilla
+    })

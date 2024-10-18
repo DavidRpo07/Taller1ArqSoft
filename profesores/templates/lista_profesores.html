@@ -18,7 +18,23 @@
             <label for="searchMateria" class="form-label">Buscar por Materia:</label>
             <input type="text" class="form-control" name="searchMateria" id="searchMateria" value="{{ searchMateria }}">
         </div>
-        <button type="submit" class="btn btn-primary">Buscar</button>
+            <style>
+            .custom-gray-button {
+              background-color: #e9edf3; /* Color de fondo gris claro */
+              color: #000000; /* Texto en negro */
+              border: none; /* Sin bordes */
+              padding: 10px 15px;
+              font-size: 16px;
+              border-radius: 8px; /* Bordes redondeados */
+              cursor: pointer;
+              box-shadow: 0px 2px 5px rgba(0, 0, 0, 0.1); /* Sombra ligera */
+            }
+          
+            .custom-gray-button:hover {
+              background-color: #d8dee6; /* Color más oscuro al hacer hover */
+            }
+          </style>
+        <button type="submit" class="btn custom-gray-button">Buscar</button>
     
         <!-- Combo box para seleccionar el criterio de ordenación -->
         <div class="form-group mr-3">
@@ -31,9 +47,8 @@
                 <option value="menor_comentarios" {% if orden_field == "menor_comentarios" %}selected{% endif %}>Menor cantidad de comentarios</option>
             </select>
         </div>
-    
-        <!-- Botón para enviar el formulario -->
-        <button type="submit" class="btn btn-primary">Ordenar</button>
+        
+        <button type="submit" class="btn custom-gray-button">Ordenar</button>
     </form>
 
     <p class="mt-3">Buscando por: {{ searchNombre }}  {{ searchMateria }} </p>

@@ -5,39 +5,29 @@ from .forms import ComentarioForm
 from django.http import HttpResponseForbidden
 from django.contrib import messages
 import openai
-from openai import OpenAI
 from django.conf import settings
 from account.models import UserProfile
 from django.contrib.auth.models import User
 from django.db.models import Avg
 
 # Inicializar el cliente de OpenAI
-client = OpenAI(api_key=settings.OPENAI_API_KEY)
-
+openai.api_key = settings.OPENAI_API_KEY
 # Función para verificar si el usuario es administrador
 def is_admin(user):
     return user.is_staff
 
 
 def revisar_comentario_por_ia(contenido):
-    try:
-        # Comentar la línea que hace la llamada a la API mientras realizas cambios
-        # response = client.chat.completions.create(
-        #     model="gpt-4",  # Asegúrate de usar el modelo correcto
-        #     messages=[
-        #         {"role": "system", "content": "Revisa este comentario y determina si es apropiado."},
-        #         {"role": "user", "content": contenido}
-        #     ]
-        # )
-        
-        # Simular una respuesta para el desarrollo
-        resultado_simulado = 'aprobado'  # O 'no aprobado', según lo que necesites para las pruebas
-        return resultado_simulado.lower() == 'aprobado'
-    
-    except Exception as e:
-        # Manejo de errores
-        print(f"Error al revisar el comentario: {e}")
-        return False  # O maneja el error de otra manera según tus necesidades
+    response = openai.ChatCompletion.create(
+        model="gpt-3.5-turbo",
+        messages=[{"role": "system", "content": "Revisa este comentario y determina si es apropiado."},
+                  {"role": "user", "content": contenido}]
+    )
+    resultado = response.choices[0].message.content.strip()
+    if resultado.lower() == 'aprobado':
+        return True
+    else:
+        return False
 
 # Home con búsqueda de profesores
 def home(request):

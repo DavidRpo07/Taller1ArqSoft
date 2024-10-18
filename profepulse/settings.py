@@ -16,15 +16,7 @@ from dotenv import load_dotenv  # Importar la función load_dotenv
 
 
 # Cargar las variables de entorno desde el archivo .env
-load_dotenv('D:\\!Programacion\\VSCode\\Universidad\\Python\\Semestre4\\Proyecto1\\Proyecto\\ProfePulseProject\\keys.env')
-
-
-# Obtener la clave API de las variables de entorno
-OPENAI_API_KEY = os.environ.get('OPENAI_API_KEY')
-
-if OPENAI_API_KEY is None:
-    raise ValueError("La clave API de OpenAI no se encontró. Asegúrate de que el archivo .env esté configurado correctamente.")
-
+load_dotenv()
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
