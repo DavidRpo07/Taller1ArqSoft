@@ -8,7 +8,18 @@
 </head>
 <body>
     <header>
-        <img src="{% static 'images/logo_profepulse.png' %}" alt="Descripción de la imagen" class="logo">
+        <div class="logo-container">
+            <!-- Logo de Profepulse -->
+            <img src="{% static 'images/logo_profepulse.png' %}" alt="Logo Profepulse" class="logo">
+    
+            <!-- Línea vertical -->
+            <span class="vertical-line"></span>
+    
+            <!-- Logo de la Universidad -->
+            <img src="{% static 'images/logo_eafit_completo.png' %}" alt="Logo Universidad" class="logo-universidad">
+        </div>
+    
+        <!-- Navegación -->
         <nav>
             <a href="/">Inicio</a>
             <a href="{% url 'lista_profesores' %}">Profesores</a>

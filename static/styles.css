@@ -1,12 +1,3 @@
-/* Estilo básico para el cuerpo del documento */
-body {
-    font-family: Arial, sans-serif;
-    line-height: 1.6;
-    margin: 0;
-    padding: 0;
-    background-color: #f4f4f4;
-}
-
 /* Estilo para el encabezado */
 header {
     display: flex; /* Utiliza flexbox para alinear los elementos en fila */
@@ -16,10 +7,26 @@ header {
     padding: 10px 20px; /* Ajusta el padding alrededor de los elementos */
 }
 
-/* Estilo para la imagen en el encabezado */
+/* Estilo para los logos en el encabezado */
+header .logo-container {
+    display: flex;
+    align-items: center;
+}
+
 header img.logo {
     max-height: 50px; /* Ajusta la altura máxima de la imagen */
-    margin-right: 20px; /* Espacio entre la imagen y el contenido del nav */
+    margin-right: 10px; /* Espacio entre los logos y otros elementos */
+}
+header img.logo-universidad {
+    margin-left: -10px; /* Ajusta el valor negativo según lo necesites */
+    max-height: 50px;
+}
+
+header .vertical-line {
+    width: 2px;
+    height: 50px; /* La misma altura que los logos */
+    background-color: white; /* Línea vertical en blanco */
+    margin: 0 10px; /* Espacio alrededor de la línea */
 }
 
 /* Estilo para el contenedor de enlaces en el encabezado */
@@ -39,11 +46,4 @@ header a {
 /* Estilo para los enlaces en el encabezado cuando se pasa el ratón */
 header a:hover {
     text-decoration: underline;
-}
-
-/* Estilo para el contenido principal */
-main {
-    padding: 20px;
-    background-color: #fff;
-    border-radius: 8px;
 }

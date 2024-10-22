@@ -1,6 +1,6 @@
 {% extends 'base_generic.html' %}
 {% block title %}ProfePulse{% endblock %}
-
+{% load static %}
 {% block content %}
 
 <html lang="es">
@@ -45,6 +45,7 @@
 <body>
 
     <div class="container mt-5 pt-2">
+        <img src="{% static 'images/logo_profepulseColor.png' %}" style="width: 400px; height: auto;">
         <h1>ProfePulse</h1>
         <p class="lead lead-text">Una plataforma para reseñar profesores, donde podrás obtener estadísticas útiles.</p>
 
