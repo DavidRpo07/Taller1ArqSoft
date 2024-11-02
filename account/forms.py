@@ -48,3 +48,8 @@ class FormularioRegistro(forms.ModelForm):
         if commit:
             user.save()
         return user
+
+
+class LoginForm(forms.Form):
+    username = forms.CharField(label="Usuario", max_length=150)
+    password = forms.CharField(label="Contraseña", widget=forms.PasswordInput)

@@ -34,6 +34,13 @@
                     <!-- Formulario de Comentario -->
                     <form method="post">
                         {% csrf_token %}
+                        {% if form.non_field_errors %}
+                            <div class="alert alert-danger" role="alert">
+                                {% for error in form.non_field_errors %}
+                                 {{ error }}
+                                 {% endfor %}
+                            </div>
+                        {% endif %}
                         <div class="mb-3">
                             <label for="rating" class="form-label"><strong>Calificación:</strong></label>
                             <select class="form-select" name="rating" id="rating" required>

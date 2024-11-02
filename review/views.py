@@ -5,29 +5,39 @@ from .forms import ComentarioForm
 from django.http import HttpResponseForbidden
 from django.contrib import messages
 import openai
-from django.conf import settings
+import os
 from account.models import UserProfile
 from django.contrib.auth.models import User
 from django.db.models import Avg
+from dotenv import load_dotenv, find_dotenv
 
+_ = load_dotenv('keys.env')
 # Inicializar el cliente de OpenAI
-openai.api_key = settings.OPENAI_API_KEY
+
+openai.api_key = os.environ.get('OPENAI_API_KEY')
+
 # Función para verificar si el usuario es administrador
 def is_admin(user):
     return user.is_staff
 
 
-def revisar_comentario_por_ia(contenido):
-    response = openai.ChatCompletion.create(
-        model="gpt-3.5-turbo",
-        messages=[{"role": "system", "content": "Revisa este comentario y determina si es apropiado."},
-                  {"role": "user", "content": contenido}]
+def revisar_comentario_por_ia(contenido):    
+        respuesta = openai.ChatCompletion.create(
+        model="gpt-4",  
+        messages=[
+            {"role": "system", "content": "Eres un asistente que revisa comentarios para identificar si contienen palabras ofensivas."},
+            {"role": "user", "content": f"Revisa el siguiente comentario y devuelve 'aprobado' si es apropiado o 'no' si contiene palabras ofensivas:\n\nComentario: \"{contenido}\""}
+        ],
+        max_tokens=3,  # Reducido para ahorrar tokens
+        temperature=0
     )
-    resultado = response.choices[0].message.content.strip()
-    if resultado.lower() == 'aprobado':
-        return True
-    else:
-        return False
+        resultado = respuesta['choices'][0]['message']['content'].strip().lower()
+        if resultado.lower() == 'aprobado':
+            return True
+        else:
+            return False
+
+
 
 # Home con búsqueda de profesores
 def home(request):

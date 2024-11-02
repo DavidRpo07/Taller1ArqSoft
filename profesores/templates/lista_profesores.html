@@ -11,23 +11,24 @@
     <!-- Formulario de búsqueda -->
      
     <form action="" method="GET">
-        <div class="d-flex align-items-center mb-3">
+        <h3 class="fw-bold mb-4 text-center">Buscar Profesores</h3>
+        <div class="d-flex align-items-center mb-3 mt-4">
             <!-- Buscar por nombre -->
             <div class="me-3 d-flex align-items-center">
-                <label for="searchNombre" class="form-label mb-0 me-2 fw-bold">Buscar por Nombre:</label>
-                <input type="text" class="form-control" name="searchNombre" id="searchNombre" value="{{ searchNombre }}" style="width: 235px;">
+                <label for="searchNombre" class="form-label mb-0 me-2 fw-bold fs-5">Nombre:</label>
+                <input type="text" class="form-control" name="searchNombre" id="searchNombre" value="{{ searchNombre }}" style="width: 290px;">
             </div>
 
             <!-- Buscar por materia -->
             <div class="me-3 d-flex align-items-center">
-                <label for="searchMateria" class="form-label mb-0 me-2 fw-bold">Buscar por Materia:</label>
-                <input type="text" class="form-control" name="searchMateria" id="searchMateria" value="{{ searchMateria }}" style="width: 235px;">
+                <label for="searchMateria" class="form-label mb-0 me-2 fw-bold fs-5">Materia:</label>
+                <input type="text" class="form-control" name="searchMateria" id="searchMateria" value="{{ searchMateria }}" style="width: 290px;">
             </div>
 
             <!-- Ordenar por -->
             <div class="me-3 d-flex align-items-center">
-                <label for="orden_field" class="form-label mb-0 me-2 fw-bold">Ordenar por:</label>
-                <select name="orden_field" id="orden_field" class="form-control" style="width: 235px;">
+                <label for="orden_field" class="form-label mb-0 me-2 fw-bold fs-5">Ordenar:</label>
+                <select name="orden_field" id="orden_field" class="form-control" style="width: 290px;">
                     <option value=""> </option>
                     <option value="mayor_rating" {% if orden_field == "mayor_rating" %}selected{% endif %}>Mayor rating</option>
                     <option value="menor_rating" {% if orden_field == "menor_rating" %}selected{% endif %}>Menor rating</option>
