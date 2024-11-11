@@ -6,124 +6,244 @@
 <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet">
 <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.8.1/font/bootstrap-icons.css" rel="stylesheet">
 
+
+
 <div class="container mt-4">
-    <h1 class="mb-4">{{ profesor.nombre }}</h1>
-    <p><strong>Materia:</strong> {{ profesor.materia }}</p>
-    <p><strong>Área:</strong> {{ profesor.departamento }}</p>
+    <!-- Nombre del Profesor -->
+    <h1 class="mb-4 text-center">{{ profesor.nombre }}</h1>
 
-    {% if profesor.calificacion_media %}
-    <p><strong>Calificación Media:</strong></p>
-    <p>
-        {% for i in "12345" %}
-            <span class="bi bi-star{% if i|add:0 > profesor.calificacion_media %}-fill{% else %}-outline{% endif %}"></span>
-        {% endfor %}
-        ({{ profesor.calificacion_media|floatformat:1 }})
-    </p>
-    {% endif %}
-
-    {{ratings_data}}
-
-
-    <p class="card-text">Cantidad de comentarios: {{ profesor.numcomentarios }}</p>
-    {% if messages %}
-    <div class="mb-3">
-        {% for message in messages %}
-            <!-- Estilización del mensaje de error para cuenta suspendida -->
-            <div class="alert alert-{{ message.tags }} {% if message.tags == 'error' %}alert-danger border border-danger text-center{% endif %} p-4">
-                <h5 class="alert-heading">
-                    {% if message.tags == 'error' %}⚠ Atención{% endif %}
-                </h5>
-                <p class="fs-5">{{ message }}</p>
+    <!-- Contenedor de Información -->
+    <div class="info-container">
+        <!-- Área -->
+        <div class="info-item">
+            <div class="info-title">Área</div>
+            <div class="info-data">{{ profesor.departamento }}</div>
+        </div>
+        <!-- Materia -->
+        <div class="info-item">
+            <div class="info-title">Materia</div>
+            <div class="info-data">{{ profesor.materia }}</div>
+        </div>
+        <!-- Calificación -->
+        <div class="info-item">
+            <div class="info-title">Calificación <i class="bi bi-star-fill rating-star"></i></div>
+            <div class="info-data">
+                {{ profesor.calificacion_media|floatformat:1 }}
+                <small>({{ profesor.numcomentarios }})</small>
             </div>
-        {% endfor %}
+        </div>
     </div>
-    {% endif %}
-    <!-- Sección de la gráfica -->
-    <h2 class="mt-4">Distribución de Comentarios por Calificación</h2>
-    <canvas id="ratingChart" width="400" height="200"></canvas>
-    
-    <!-- Sección de Comentarios -->
-    <h2 class="mt-4">Comentarios</h2>
-    {% if comentarios %}
-        <div class="list-group">
-            {% for comentario in comentarios %}
-                <div class="list-group-item">
-                    <strong>
-                        {% if comentario.anonimo %}
-                            Anónimo
-                        {% else %}
-                            <a href="{% url 'user_profile' comentario.usuario.id %}">{{ comentario.usuario.username }}</a>
-                        {% endif %}
-                    </strong>
-                    <p>{{ comentario.contenido }}</p>
-                    <p>
-                        <small class="text-muted">{{ comentario.fecha }}</small><br>
+
+    <!-- Contenedor de Gráficas -->
+    <div class="charts-container">
+        <!-- Gráfica de Barras -->
+        {% if grafica_barras %}
+        <div class="chart-item">
+            <h3>Distribución de Calificaciones</h3>
+            <img src="data:image/png;base64,{{ grafica_barras }}" alt="Gráfica de barras" class="img-fluid mt-3">
+        </div>
+        {% else %}
+        <p class="text-muted text-center mt-4">No hay suficiente información para generar la gráfica de barras.</p>
+        {% endif %}
+
+        <!-- Gráfica de Línea -->
+        {% if grafica_por_semestre %}
+        <div class="chart-item">
+            <h3>Calificación Promedio por Semestre</h3>
+            <img src="data:image/png;base64,{{ grafica_por_semestre }}" alt="Gráfica de Calificaciones por Semestre" class="img-fluid mt-3">
+        </div>
+        {% else %}
+        <p class="text-muted text-center mt-4">No hay suficiente información para generar la gráfica de línea.</p>
+        {% endif %}
+    </div>
+
+
+
+        <!-- Sección de Comentarios -->
+        <div class="comments-container mt-4">
+            <h2 class="mb-4 text-center">Comentarios</h2>
+            <div class="text-right mb-3">
+                <a href="{% url 'agregar_comentario' profesor.id %}" class="btn agregar-comentario-btn">Agregar Comentario</a>
+            </div>
+        
+            <!-- Botón para Agregar Comentarios -->
+
+        
+            {% if comentarios %}
+            <div class="list-group">
+                {% for comentario in comentarios %}
+                <div class="list-group-item comment-item">
+                    <!-- Encabezado del comentario -->
+                    <div class="comment-header">
+                        <strong class="comment-user">
+                            {% if comentario.anonimo %}
+                                Anónimo
+                            {% else %}
+                                <a href="{% url 'user_profile' comentario.usuario.id %}">{{ comentario.usuario.username }}</a>
+                            {% endif %}
+                        </strong>
+                        <small class="text-muted">{{ comentario.fecha }}</small>
+                    </div>
+        
+                    <!-- Contenido del comentario -->
+                    <div class="comment-content">
+                        <p>{{ comentario.contenido }}</p>
+                    </div>
+        
+                    <!-- Calificación del comentario -->
+                    <div class="comment-rating">
                         <strong>Rating:</strong>
                         {% for i in "12345" %}
                             <span class="bi bi-star{% if i|add:0 > comentario.rating %}-fill{% else %}-outline{% endif %}"></span>
                         {% endfor %}
                         ({{ comentario.rating|floatformat:1 }})
-                    </p>
+                    </div>
                 </div>
-            {% endfor %}
+                {% endfor %}
+            </div>
+            {% else %}
+            <p class="text-muted">No hay comentarios aún.</p>
+            {% endif %}
         </div>
-    {% else %}
-        <p class="text-muted">No hay comentarios aún.</p>
-    {% endif %}
 
-    <a href="{% url 'agregar_comentario' profesor.id %}" class="btn btn-primary mt-3">Agregar Comentario</a>
 </div>
 
-<!-- Incluir Chart.js -->
-<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<style>
+    .info-container {
+        display: flex;
+        flex-wrap: wrap;
+        justify-content: center;
+        align-items: flex-start;
+        gap: 20px;
+        padding: 20px;
+        border: 1px solid #ddd;
+        border-radius: 8px;
+        background-color: #f9f9f9;
+        max-width: 800px;
+        margin: 20px auto;
+        box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+    }
+    .info-item {
+        flex: 1 1 30%; /* Se ajusta al 30% del contenedor */
+        text-align: center;
+    }
+    .info-title {
+        font-size: 1rem;
+        color: #6c757d;
+        margin-bottom: 5px;
+    }
+    .info-data {
+        font-size: 1.4rem;
+        color: #333;
+        font-weight: bold;
+    }
+    .rating-star {
+        color: #9b9b9b;
+    }
+    .charts-container {
+        display: flex;
+        flex-wrap: wrap;
+        justify-content: space-between;
+        align-items: flex-start;
+        gap: 20px;
+        padding: 20px;
+        border: 1px solid #ddd;
+        border-radius: 8px;
+        background-color: #fff;
+        box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+        margin-top: 40px;
+    }
+    .chart-item {
+        flex: 1 1 45%; /* Cada gráfica ocupa el 45% del espacio */
+        text-align: center;
+    }
+    .comments-container {
+        margin-top: 40px;
+        padding: 20px;
+        border: 1px solid #ddd;
+        border-radius: 8px;
+        background-color: #f9f9f9;
+        box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+    }
+    .list-group-item {
+        border: none;
+        border-bottom: 1px solid #eee;
+    }
+    .list-group-item:last-child {
+        border-bottom: none;
+    }
+    .comments-container {
+    padding: 20px;
+    border: 1px solid #ddd;
+    border-radius: 8px;
+    background-color: #f9f9f9;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+}
 
-<!-- Código de la gráfica -->
-<script type="application/json" id="ratings-data">{{ ratings_data|safe }}</script>
+.comment-item {
+    border: none;
+    border-bottom: 1px solid #eee;
+    padding: 15px 10px;
+    transition: background-color 0.2s ease;
+}
 
-<script>
-    // Obtener los datos de ratings desde el script JSON
+.comment-item:last-child {
+    border-bottom: none;
+}
 
-    console.log("{{ ratings_data}}");
+.comment-item:hover {
+    background-color: #f1f1f1;
+}
 
-    const ratingsData = JSON.parse(document.getElementById('ratings-data').textContent);
-    
+.comment-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 8px;
+}
 
-    // Imprimir los datos en la consola para verificar si se están pasando correctamente
-    console.log('Datos de rating:', ratingsData);
-    
-    const ctx = document.getElementById('ratingChart').getContext('2d');
-    const ratingChart = new Chart(ctx, {
-        type: 'bar',
-        data: {
-            labels: ['1 Estrella', '2 Estrellas', '3 Estrellas', '4 Estrellas', '5 Estrellas'],  // Etiquetas de cada barra
-            datasets: [{
-                label: 'Cantidad de Comentarios',
-                data: Object.values(ratingsData),  // Los valores de los ratings
-                backgroundColor: [
-                    'rgba(255, 99, 132, 0.2)',
-                    'rgba(54, 162, 235, 0.2)',
-                    'rgba(255, 206, 86, 0.2)',
-                    'rgba(75, 192, 192, 0.2)',
-                    'rgba(153, 102, 255, 0.2)'
-                ],
-                borderColor: [
-                    'rgba(255, 99, 132, 1)',
-                    'rgba(54, 162, 235, 1)',
-                    'rgba(255, 206, 86, 1)',
-                    'rgba(75, 192, 192, 1)',
-                    'rgba(153, 102, 255, 1)'
-                ],
-                borderWidth: 1
-            }]
-        },
-        options: {
-            scales: {
-                y: {
-                    beginAtZero: true
-                }
-            }
-        }
-    });
-</script>
+.comment-user {
+    font-size: 1rem;
+    color: #007bff;
+}
 
+.comment-user a {
+    text-decoration: none;
+    font-weight: bold;
+}
+
+.comment-user a:hover {
+    text-decoration: underline;
+}
+
+.comment-content {
+    margin: 10px 0;
+    font-size: 0.95rem;
+    color: #333;
+}
+
+.comment-rating {
+    font-size: 0.9rem;
+    color: #555;
+}
+
+.agregar-comentario-btn {
+    background-color: #007bff;
+    color: #fff;
+    border: none;
+    padding: 10px 20px;
+    font-size: 1rem;
+    font-weight: bold;
+    border-radius: 5px;
+    text-decoration: none;
+    transition: background-color 0.3s ease;
+}
+
+.agregar-comentario-btn:hover {
+    background-color: #a9a9a9;
+    text-decoration: none;
+    color: #fff;
+}
+
+</style>
 {% endblock %}

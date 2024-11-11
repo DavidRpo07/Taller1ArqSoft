@@ -12,7 +12,7 @@ urlpatterns = [
     path('admin/', admin.site.urls),
     path('', reviewViews.home, name='home'),
     path('profesores/', profesoresViews.lista_profesores, name='lista_profesores'),
-    path('profesor/<int:profesor_id>/', reviewViews.detalle_profesor, name='detalle_profesor'),
+    path('profesor/<int:profesor_id>/', profesoresViews.detalle_profesor, name='detalle_profesor'),
     path('profesor/<int:profesor_id>/comentar/', reviewViews.agregar_comentario, name='agregar_comentario'),
     path('agregarprofesor/', profesoresViews.upload_csv, name='agregar_profesor'),
     path('profile/<int:user_id>/', accountViews.user_profile, name='user_profile'),
