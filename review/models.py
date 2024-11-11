@@ -16,13 +16,21 @@ class Comentario(models.Model):
         ('2021-2', '2021-2'),
         ('2021-1', '2021-1'),
     ]
-    profesor = models.ForeignKey(Profesor, related_name='comentarios', on_delete=models.CASCADE)
+    profesor = models.ForeignKey('profesores.Profesor', related_name='comentarios', on_delete=models.CASCADE)
+    materia = models.ForeignKey(
+        'profesores.Materia', 
+        related_name='comentarios', 
+        on_delete=models.SET_NULL,  # Si se elimina una materia, dejar como NULL
+        null=True,  # Permite valores nulos
+        blank=True  # Permite que el formulario deje el campo vacío
+    )
     usuario = models.ForeignKey(User, on_delete=models.CASCADE)
-    contenido = models.TextField() 
+    contenido = models.TextField()
     fecha = models.CharField(max_length=7, choices=SEMESTRES, default='2024-2')
-    rating = models.IntegerField(choices=((0, 'Seleccione una'), (1, '1 Estrella'), (2, '2 Estrellas'),
-                                          (3, '3 Estrellas'), (4, '4 Estrellas'), (5, '5 Estrellas')), default=0)
-    aprobado_por_ia = models.BooleanField(default=False) 
+    rating = models.IntegerField(choices=((1, '1 Estrella'), (2, '2 Estrellas'), 
+                                          (3, '3 Estrellas'), (4, '4 Estrellas'), 
+                                          (5, '5 Estrellas')), default=1)
+    aprobado_por_ia = models.BooleanField(default=False)
     anonimo = models.BooleanField(default=False)
 
     def __str__(self):

@@ -74,7 +74,16 @@
                         </a>
                     </h5>
                     <p class="card-text">Área: {{ profesor.departamento }}</p>
-                    <p class="card-text">Materia: {{ profesor.materia }}</p>
+                    <p class="card-text">
+                        Materias: 
+                        {% if profesor.materias.exists %}
+                            {% for materia in profesor.materias.all %}
+                                <span>{{ materia.nombre }}</span>{% if not forloop.last %}, {% endif %}
+                            {% endfor %}
+                        {% else %}
+                            <span class="text-muted">No tiene materias asignadas</span>
+                        {% endif %}
+                    </p>
                     {% if profesor.calificacion_media %}
                     <p class="card-text">Calificación Media:
                         {% for i in "12345" %}

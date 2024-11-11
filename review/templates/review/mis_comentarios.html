@@ -3,60 +3,132 @@
 {% block title %}Mis Comentarios{% endblock %}
 
 {% block content %}
+<!-- Incluir Bootstrap 5 -->
 <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet">
-<h1>Mis Comentarios</h1>
 
-<!-- Enlace para volver a la lista de profesores -->
-<a href="{% url 'lista_profesores' %}" class="btn btn-secondary mb-3">Volver a Profesores</a>
+<div class="container mt-5">
+    <!-- Título de la página -->
+    <div class="text-center mb-4">
+        <h1 class="text-uppercase">Mis Comentarios</h1>
+    </div>
 
-{% if comentarios %}
-    <table class="table">
-        <thead>
-            <tr>
-                <th>Comentario</th>
-                <th>Calificación</th>
-                <th>Profesor</th>
-                {% if comentario.usuario == request.user or is_admin %}
-                <th>Acciones</th>
-                {% endif %}
-            </tr>
-        </thead>
-        <tbody>
-            {% for comentario in comentarios %}
-            <tr>
-                <!-- Mostrar el contenido del comentario -->
-                <td>{{ comentario.contenido }}</td>
-                <!-- Mostrar la calificación del comentario -->
-                <td>{{ comentario.rating }}</td>
-                <td>{{ comentario.profesor.nombre }}</td>
-                <td>
+    <!-- Enlace para volver a la lista de profesores -->
+    <div class="d-flex justify-content-start mb-4">
+        <a href="{% url 'lista_profesores' %}" class="btn custom-gray-btn">Volver a Profesores</a>
+    </div>
 
-                    <!-- Mostrar el botón de editar solo si el usuario es el propietario del comentario o es admin -->
-                    {% if comentario.usuario == request.user or is_admin %}
-                        <a href="{% url 'edit_review' comentario.id %}" class="btn btn-primary">Editar</a>
-                    {% endif %}
-                    <!-- Formulario para eliminar el comentario -->
-                    {% if is_admin %}
-                        <form method="POST" action="{% url 'delete_review' comentario.id %}" style="display:inline;">
-                            {% csrf_token %}
-                            <button type="submit" class="btn btn-danger">Eliminar</button>
-                        </form>
-                    {% elif comentario.usuario == request.user %}
-                        <form method="POST" action="{% url 'delete_own_review' comentario.id %}" style="display:inline;">
-                            {% csrf_token %}
-                            <button type="submit" class="btn btn-danger">Eliminar</button>
-                        </form>
-                    {% endif %}
-                </td>
-            </tr>
-            {% endfor %}
-        </tbody>
-    </table>
-{% else %}
-    <p>No has realizado ningún comentario aún.</p>
-{% endif %}
+    {% if comentarios %}
+    <div class="card shadow">
+        <div class="card-header text-white" style="background-color: #333;">
+            <h4 class="mb-0">Lista de Comentarios</h4>
+        </div>
+        <div class="card-body">
+            <table class="table table-striped">
+                <thead class="table-dark">
+                    <tr>
+                        <th>Comentario</th>
+                        <th>Calificación</th>
+                        <th>Profesor</th>
+                        {% if comentario.usuario == request.user or is_admin %}
+                        <th>Acciones</th>
+                        {% endif %}
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for comentario in comentarios %}
+                    <tr>
+                        <!-- Mostrar el contenido del comentario -->
+                        <td>{{ comentario.contenido }}</td>
+                        <!-- Mostrar la calificación del comentario -->
+                        <td>{{ comentario.rating }}</td>
+                        <td>{{ comentario.profesor.nombre }}</td>
+                        <td>
+                            <!-- Mostrar el botón de editar solo si el usuario es el propietario del comentario o es admin -->
+                            {% if comentario.usuario == request.user or is_admin %}
+                            <a href="{% url 'edit_review' comentario.id %}" class="btn custom-edit-btn">Editar</a>
+                            {% endif %}
+                            <!-- Formulario para eliminar el comentario -->
+                            {% if is_admin %}
+                            <form method="POST" action="{% url 'delete_review' comentario.id %}" style="display:inline;"onsubmit="return confirm('¿Estás seguro de que deseas eliminar este comentario?');">
+                                {% csrf_token %}
+                                <button type="submit" class="btn custom-delete-btn">Eliminar</button>
+                            </form>
+                            {% elif comentario.usuario == request.user %}
+                            <form method="POST" action="{% url 'delete_own_review' comentario.id %}" style="display:inline;"onsubmit="return confirm('¿Estás seguro de que deseas eliminar este comentario?');">
+                                {% csrf_token %}
+                                <button type="submit" class="btn custom-delete-btn">Eliminar</button>
+                            </form>
+                            {% endif %}
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+    {% else %}
+    <div class="text-center mt-4">
+        <p class="text-muted">No has realizado ningún comentario aún.</p>
+    </div>
+    {% endif %}
 
-<!-- Enlace para regresar a la página principal -->
-<a href="/" class="btn btn-secondary mt-3">Volver al Inicio</a>
+    <!-- Enlace para regresar a la página principal -->
+    <div class="d-flex justify-content-center mt-4">
+        <a href="/" class="btn custom-gray-btn">Volver al Inicio</a>
+    </div>
+</div>
 
+<!-- Estilos personalizados -->
+<style>
+    .custom-gray-btn {
+        background-color: #e9edf3; /* Gris claro */
+        color: #000;
+        border: none;
+        padding: 10px 20px;
+        font-size: 16px;
+        font-weight: bold;
+        border-radius: 8px;
+        transition: background-color 0.3s ease;
+    }
+
+    .custom-gray-btn:hover {
+        background-color: #d8dee6; /* Gris más oscuro */
+    }
+
+    .custom-edit-btn {
+        background-color: #4caf50; /* Verde */
+        color: #fff;
+        border: none;
+        padding: 6px 12px;
+        font-size: 14px;
+        border-radius: 8px;
+        transition: background-color 0.3s ease;
+    }
+
+    .custom-edit-btn:hover {
+        background-color: #45a047; /* Verde más oscuro */
+    }
+
+    .custom-delete-btn {
+        background-color: #f44336; /* Rojo */
+        color: #fff;
+        border: none;
+        padding: 6px 12px;
+        font-size: 14px;
+        border-radius: 8px;
+        transition: background-color 0.3s ease;
+    }
+
+    .custom-delete-btn:hover {
+        background-color: #e53935; /* Rojo más oscuro */
+    }
+
+    .card {
+        border-radius: 8px;
+        box-shadow: 0 4px 10px rgba(0, 0, 0, 0.15); /* Sombra más destacada */
+    }
+</style>
+
+<!-- Incluir Scripts de Bootstrap 5 -->
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>
 {% endblock %}

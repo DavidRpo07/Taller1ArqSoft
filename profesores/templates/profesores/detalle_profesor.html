@@ -6,9 +6,18 @@
 <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet">
 <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.8.1/font/bootstrap-icons.css" rel="stylesheet">
 
-
-
 <div class="container mt-4">
+
+    {% if messages %}
+    <div class="mt-4">
+        {% for message in messages %}
+        <div class="alert alert-{{ message.tags }} alert-dismissible fade show" role="alert">
+            {{ message }}
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+        </div>
+        {% endfor %}
+    </div>
+    {% endif %}
     <!-- Nombre del Profesor -->
     <h1 class="mb-4 text-center">{{ profesor.nombre }}</h1>
 
@@ -21,8 +30,18 @@
         </div>
         <!-- Materia -->
         <div class="info-item">
-            <div class="info-title">Materia</div>
-            <div class="info-data">{{ profesor.materia }}</div>
+            <div class="info-title">Materias</div>
+            <div class="info-data">
+                {% if profesor.materias.exists %}
+                <ul class="materias-list">
+                    {% for materia in profesor.materias.all %}
+                        <li>{{ materia.nombre }}</li>
+                    {% endfor %}
+                </ul>
+                {% else %}
+                <span class="text-muted">No tiene materias asignadas</span>
+                {% endif %}
+            </div>
         </div>
         <!-- Calificación -->
         <div class="info-item">
@@ -34,79 +53,108 @@
         </div>
     </div>
 
+    <!-- Filtros -->
+    <form method="get" class="mb-4">
+        <div class="row">
+            <!-- Filtro por materia -->
+            <div class="col-md-4">
+                <label for="materia" class="form-label"><strong>Filtrar por materia:</strong></label>
+                <select name="materia" id="materia" class="form-select" onchange="this.form.submit()">
+                    <option value="todas" {% if materia_seleccionada == 'todas' %}selected{% endif %}>Todas las materias</option>
+                    {% for materia in materias %}
+                    <option value="{{ materia.id }}" {% if materia_seleccionada|stringformat:"s" == materia.id|stringformat:"s" %}selected{% endif %}>
+                        {{ materia.nombre }}
+                    </option>
+                    {% endfor %}
+                </select>
+            </div>
+            <!-- Filtro por semestre -->
+            <div class="col-md-4">
+                <label for="semestre" class="form-label"><strong>Filtrar por semestre:</strong></label>
+                <select name="semestre" id="semestre" class="form-select" onchange="this.form.submit()">
+                    <option value="">Todos los semestres</option>
+                    {% for semestre in semestres_disponibles %}
+                    <option value="{{ semestre }}" {% if semestre_seleccionado == semestre %}selected{% endif %}>
+                        {{ semestre }}
+                    </option>
+                    {% endfor %}
+                </select>
+            </div>
+        </div>
+    </form>
+
     <!-- Contenedor de Gráficas -->
     <div class="charts-container">
-        <!-- Gráfica de Barras -->
         {% if grafica_barras %}
         <div class="chart-item">
             <h3>Distribución de Calificaciones</h3>
             <img src="data:image/png;base64,{{ grafica_barras }}" alt="Gráfica de barras" class="img-fluid mt-3">
         </div>
-        {% else %}
-        <p class="text-muted text-center mt-4">No hay suficiente información para generar la gráfica de barras.</p>
         {% endif %}
-
-        <!-- Gráfica de Línea -->
         {% if grafica_por_semestre %}
         <div class="chart-item">
             <h3>Calificación Promedio por Semestre</h3>
             <img src="data:image/png;base64,{{ grafica_por_semestre }}" alt="Gráfica de Calificaciones por Semestre" class="img-fluid mt-3">
         </div>
-        {% else %}
-        <p class="text-muted text-center mt-4">No hay suficiente información para generar la gráfica de línea.</p>
         {% endif %}
     </div>
 
+    <!-- Sección de Comentarios -->
+    <div class="comments-container mt-4">
+        <h2 class="mb-4 text-center">Comentarios</h2>
 
-
-        <!-- Sección de Comentarios -->
-        <div class="comments-container mt-4">
-            <h2 class="mb-4 text-center">Comentarios</h2>
-            <div class="text-right mb-3">
-                <a href="{% url 'agregar_comentario' profesor.id %}" class="btn agregar-comentario-btn">Agregar Comentario</a>
-            </div>
+       
+        <div class="d-flex justify-content-between align-items-center mb-3">
+            
+            <a href="{% url 'agregar_comentario' profesor.id %}" class="btn agregar-comentario-btn">Agregar Comentario</a>
         
-            <!-- Botón para Agregar Comentarios -->
-
-        
-            {% if comentarios %}
-            <div class="list-group">
-                {% for comentario in comentarios %}
-                <div class="list-group-item comment-item">
-                    <!-- Encabezado del comentario -->
-                    <div class="comment-header">
-                        <strong class="comment-user">
-                            {% if comentario.anonimo %}
-                                Anónimo
-                            {% else %}
-                                <a href="{% url 'user_profile' comentario.usuario.id %}">{{ comentario.usuario.username }}</a>
-                            {% endif %}
-                        </strong>
-                        <small class="text-muted">{{ comentario.fecha }}</small>
-                    </div>
-        
-                    <!-- Contenido del comentario -->
-                    <div class="comment-content">
-                        <p>{{ comentario.contenido }}</p>
-                    </div>
-        
-                    <!-- Calificación del comentario -->
-                    <div class="comment-rating">
-                        <strong>Rating:</strong>
-                        {% for i in "12345" %}
-                            <span class="bi bi-star{% if i|add:0 > comentario.rating %}-fill{% else %}-outline{% endif %}"></span>
-                        {% endfor %}
-                        ({{ comentario.rating|floatformat:1 }})
-                    </div>
+            
+            <form method="get" class="d-inline">
+                <label for="rating" class="visually-hidden">Filtrar por Calificación</label>
+                <div class="d-flex align-items-center">
+                    <select name="rating" id="rating" class="form-select me-2" style="width: auto;">
+                        <option value="">Todos</option>
+                        <option value="1">1 estrella</option>
+                        <option value="2">2 estrellas</option>
+                        <option value="3">3 estrellas</option>
+                        <option value="4">4 estrellas</option>
+                        <option value="5">5 estrellas</option>
+                    </select>
+                    <button type="submit" class="rating-filter-btn">Filtrar por Calificación</button>
                 </div>
-                {% endfor %}
-            </div>
-            {% else %}
-            <p class="text-muted">No hay comentarios aún.</p>
-            {% endif %}
+            </form>
         </div>
-
+        
+        {% if comentarios_mostrados %}
+        <div class="list-group">
+            {% for comentario in comentarios_mostrados %}
+            <div class="list-group-item comment-item">
+                <div class="comment-header">
+                    <strong class="comment-user">
+                        {% if comentario.anonimo %} Anónimo {% else %}
+                        <a href="{% url 'user_profile' comentario.usuario.id %}">{{ comentario.usuario.username }}</a>
+                        {% endif %}
+                    </strong>
+                    <small class="text-muted">{{ comentario.fecha }}</small>
+                </div>
+                <div class="comment-content">
+                    <p>{{ comentario.contenido }}</p>
+                </div>
+                <div class="comment-rating">
+                    <strong>Calificación:</strong> {{ comentario.rating|floatformat:1 }}
+                </div>
+                <div class="comment-materia">
+                    <strong>Materia:</strong> {{ comentario.materia.nombre }}
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+        {% else %}
+        <p class="text-muted text-center">No hay comentarios aún.</p>
+        {% endif %}
+    </div>
 </div>
+
 
 <style>
     .info-container {
@@ -201,6 +249,14 @@
     align-items: center;
     margin-bottom: 8px;
 }
+.comment-materia {
+    margin-top: 8px;
+    font-size: 0.9rem;
+    color: #555;
+}
+.comment-materia strong {
+    color: #333;
+}
 
 .comment-user {
     font-size: 1rem;
@@ -245,5 +301,40 @@
     color: #fff;
 }
 
+form {
+    margin-bottom: 20px;
+}
+
+form .form-label {
+    font-weight: bold;
+    font-size: 1rem;
+    color: #333;
+}
+
+form .form-select {
+    border-radius: 5px;
+    padding: 10px;
+    font-size: 1rem;
+}
+.materias-list {
+        list-style-type: none; /* Quitar los puntos de la lista */
+        padding: 0; /* Quitar el padding de la lista */
+        margin: 0; /* Quitar el margen */
+    }
+    .materias-list li {
+        padding: 5px 0; /* Espaciado entre cada materia */
+        font-size: 1.2rem; /* Ajustar el tamaño del texto */
+        color: #333; /* Color del texto */
+    }
+
+    .rating-filter-btn {
+        font-size: 1rem; /* Aumentar tamaño del texto */
+        padding: 10px 20px; /* Ajustar espacio interno */
+        white-space: nowrap; /* Evitar que el texto se corte o se mueva a otra línea */
+        border-radius: 5px; /* Bordes redondeados */
+        background-color: #007bff; /* Color de fondo */
+        color: white; /* Color del texto */
+        border: none; /* Sin borde */
+    }
 </style>
 {% endblock %}

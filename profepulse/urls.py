@@ -19,6 +19,7 @@ urlpatterns = [
     path('eliminarprofesor/', profesoresViews.manage_profesor, name='manage_profesor'),
     path('eliminarprofesor/<int:profesor_id>/', profesoresViews.delete_profesor, name='eliminar_profesor'),
     path('editarprofesor/<int:profesor_id>/', profesoresViews.edit_profesor, name='editar_profesor'),
+    path('agregar-materia/', profesoresViews.agregar_materia, name='agregar_materia'),
 
     
     # Nuevas rutas para "Mis Comentarios", editar y eliminar reseñas
@@ -27,7 +28,6 @@ urlpatterns = [
     path('delete_own_review/<int:comentario_id>/', reviewViews.delete_own_review, name='delete_own_review'),
     path('delete_review/<int:comentario_id>/', reviewViews.delete_review, name='delete_review'),
     path('review/manage_reviews/', reviewViews.manage_reviews, name='manage_reviews'),
-    path('estadisticas', reviewViews.estadisticas, name='estadisticas'),
 
     # Rutas de autenticación
     path('login/', LoginView.as_view(template_name='registro/login.html'), name='login'),

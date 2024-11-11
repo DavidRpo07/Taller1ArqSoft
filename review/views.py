@@ -1,7 +1,7 @@
 from django.shortcuts import render, get_object_or_404, redirect
 from django.contrib.auth.decorators import login_required, user_passes_test
-from .models import Comentario, Profesor
-from .forms import ComentarioForm
+from .models import Comentario
+from profesores.models import Profesor, Materia
 from django.http import HttpResponseForbidden
 from django.contrib import messages
 import openai
@@ -70,6 +70,7 @@ def home(request):
 # Vista para agregar un comentario a un profesor
 @login_required
 def agregar_comentario(request, profesor_id):
+    from review.forms import ComentarioForm
     profesor = get_object_or_404(Profesor, pk=profesor_id)
     
     # Obtener el UserProfile del usuario actual
@@ -81,7 +82,7 @@ def agregar_comentario(request, profesor_id):
         return redirect('detalle_profesor', profesor_id=profesor.id)
     
     if request.method == 'POST':
-        form = ComentarioForm(request.POST)
+        form = ComentarioForm(request.POST, profesor=profesor)  # Pasa el profesor al formulario
         if form.is_valid():
             comentario = form.save(commit=False)
             comentario.profesor = profesor
@@ -101,7 +102,7 @@ def agregar_comentario(request, profesor_id):
             else:
                 form.add_error(None, "Tu comentario ha sido rechazado por no cumplir con las normas.")
     else:
-        form = ComentarioForm()
+        form = ComentarioForm(profesor=profesor)  # Pasa el profesor al formulario
     
     return render(request, 'review/agregar_comentario.html', {
         'form': form,
@@ -109,15 +110,6 @@ def agregar_comentario(request, profesor_id):
     })
 
 
-
-# Detalle de un profesor con sus comentarios aprobados
-def detalle_profesor(request, profesor_id):
-    profesor = get_object_or_404(Profesor, pk=profesor_id)
-    comentarios = profesor.comentarios.filter(aprobado_por_ia=True)  # Solo mostrar comentarios aprobados
-    return render(request, 'profesores/detalle_profesor.html', {
-        'profesor': profesor,
-        'comentarios': comentarios
-    })
 
 # Vista para que los administradores gestionen las reseñas
 @user_passes_test(is_admin)
@@ -138,6 +130,7 @@ def delete_review(request, comentario_id):
 # Vista para editar una reseña (solo si es el propietario)
 @login_required
 def edit_review(request, comentario_id):
+    from review.forms import ComentarioForm
     comentario = get_object_or_404(Comentario, id=comentario_id)
     
     # Verificar que el usuario actual sea el propietario del comentario
@@ -179,29 +172,3 @@ def mis_comentarios(request, user_id):
     comentarios = Comentario.objects.filter(usuario=usuario).order_by('-fecha')
 
     return render(request, 'review/mis_comentarios.html', {'comentarios': comentarios, 'usuario': usuario, 'is_admin': is_admin})
-
-def estadisticas(request):
-    profesores = Profesor.objects.all()  # Obtener todos los profesores para el selector
-    profesor_seleccionado = None
-    promedios_por_semestre = {}
-
-    if request.method == 'POST':
-        profesor_id = request.POST.get('profesor')  # Obtener el ID del profesor seleccionado
-
-        if profesor_id:
-            profesor_seleccionado = Profesor.objects.get(id=profesor_id)
-
-            # Obtener el promedio de rating por cada semestre del profesor seleccionado
-            promedios_por_semestre = (Comentario.objects
-                                      .filter(profesor=profesor_seleccionado)
-                                      .values('fecha')
-                                      .annotate(promedio_rating=Avg('rating'))
-                                      .order_by('fecha'))
-
-            promedios_por_semestre = list(promedios_por_semestre)
-
-    return render(request, 'statistics/estadisticas.html', {
-        'profesores': profesores,
-        'profesor_seleccionado': profesor_seleccionado,
-        'promedios_por_semestre': promedios_por_semestre
-    })
