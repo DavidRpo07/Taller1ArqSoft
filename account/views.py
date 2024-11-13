@@ -1,23 +1,70 @@
 from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib.auth.models import User
-from .models import UserProfile
+from .models import UserProfile, PendingUser
 from django.contrib import messages
 from .forms import FormularioRegistro
+from django.core.mail import send_mail
+from django.conf import settings
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth.decorators import user_passes_test
+import random # Para generar un codigo de confirmación
+
+
 
 def register(request):
     if request.method == 'POST':
         form = FormularioRegistro(request.POST)
         if form.is_valid():
-            user = form.save()
-            # Crear el UserProfile para el nuevo usuario
-            UserProfile.objects.create(user=user)
-            messages.success(request, 'Registro exitoso. Ahora puedes iniciar sesión.')
-            return redirect('login')  # Redirige a la vista de inicio de sesión después del registro
+            codigo = random.randint(100000, 999999)
+            pending_user = PendingUser.objects.create(
+                email=form.cleaned_data['email'],
+                username=form.cleaned_data['username'],
+                first_name=form.cleaned_data['first_name'],
+                last_name=form.cleaned_data['last_name'],
+                password=form.cleaned_data['password1'],  # La contraseña se encripta luego
+                confirmation_code=str(codigo),
+            )
+
+            # Enviar el correo con el código de confirmación
+            send_mail(
+                'Código de Confirmación',
+                f'Tu código de confirmación es: {pending_user.confirmation_code}',
+                'profepulse@gmail.com',
+                [pending_user.email],
+                fail_silently=False,
+            )
+
+            messages.success(request, 'Hemos enviado un código de confirmación a tu correo. Por favor, verifica.')
+            return redirect('confirmar_cuenta')  # Redirigir a la vista de confirmación
     else:
         form = FormularioRegistro()
+
     return render(request, 'registro/register.html', {'form': form})
+
+def confirmar_cuenta(request):
+    if request.method == 'POST':
+        email = request.POST.get('email')
+        confirmation_code = request.POST.get('codigo')
+
+        try:
+            pending_user = PendingUser.objects.get(email=email, confirmation_code=confirmation_code)
+
+            user = User.objects.create_user(
+                username=pending_user.username,
+                email=pending_user.email,
+                first_name=pending_user.first_name,
+                last_name=pending_user.last_name,
+                password=pending_user.password,
+            )
+            pending_user.delete()
+
+            # Añadir mensaje de éxito
+            messages.success(request, 'Cuenta confirmada exitosamente. Ahora puedes iniciar sesión.')
+            return redirect('login')  # Redirige al formulario de inicio de sesión
+        except PendingUser.DoesNotExist:
+            messages.error(request, 'El código de confirmación o el correo son incorrectos.')
+
+    return render(request, 'registro/confirmar_cuenta.html')
 
 # Perfil del usuario
 @login_required

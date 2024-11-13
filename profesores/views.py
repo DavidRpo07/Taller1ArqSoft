@@ -430,18 +430,23 @@ def estadisticas(request):
     # Intentar obtener el objeto de la materia seleccionada
     materia_seleccionada = Materia.objects.filter(nombre=materia_nombre).first()
 
-    # Generar los gráficos solo si la materia existe
+    # Inicializar variables
+    grafico_dispersion = None
+    grafico_distribucion = None
+    grafica_promedio = None
+    error_message = None
+
+    # Generar los gráficos solo si la materia existe y tiene comentarios asociados
     if materia_seleccionada:
-        grafico_dispersion = generar_grafico_dispersion(materia_seleccionada)
-        grafico_distribucion = generar_grafico_distribucion_frecuencias(materia_seleccionada)
-        grafica_promedio = grafica_promedio_rating_por_semestre(materia_seleccionada)
-        error_message = None
+        comentarios = Comentario.objects.filter(materia=materia_seleccionada, aprobado_por_ia=True)
+        if comentarios.exists():
+            grafico_dispersion = generar_grafico_dispersion(materia_seleccionada)
+            grafico_distribucion = generar_grafico_distribucion_frecuencias(materia_seleccionada)
+            grafica_promedio = grafica_promedio_rating_por_semestre(materia_seleccionada)
+        else:
+            error_message = "No hay comentarios disponibles para generar gráficos estadísticos de esta materia."
     else:
-        # Si no se seleccionó una materia válida, mostrar un mensaje de error
-        grafico_dispersion = None
-        grafico_distribucion = None
-        grafica_promedio = None
-        error_message = "Selecciona una materia válida"
+        error_message = "Selecciona una materia válida."
 
     context = {
         'grafico_dispersion': grafico_dispersion,

@@ -24,12 +24,12 @@
         <button type="submit" class="btn btn-primary">Actualizar gráfico</button>
     </form>
 
-    <!-- Mostrar mensaje de error si no se ha seleccionado una materia válida -->
+    <!-- Mostrar mensaje de error si no hay reseñas -->
     {% if error_message %}
         <div class="alert alert-danger mt-3">{{ error_message }}</div>
     {% endif %}
 
-    <!-- Mostrar el gráfico generado si no hay error y existe un gráfico -->
+    <!-- Mostrar los gráficos si existen -->
     {% if grafico_dispersion %}
         <div class="text-center mt-4">
             <img src="data:image/png;base64,{{ grafico_distribucion }}" alt="Gráfico de distribución de frecuencias de {{ materia_seleccionada }}" class="img-fluid">
@@ -40,7 +40,6 @@
         <div class="text-center mt-4">
             <img src="data:image/png;base64,{{ grafico_dispersion }}" alt="Gráfico de calificación promedio de profesores en {{ materia_seleccionada }}" class="img-fluid">
         </div>
-        
     {% endif %}
 </div>
 
