@@ -20,6 +20,7 @@ urlpatterns = [
     path('eliminarprofesor/<int:profesor_id>/', profesoresViews.delete_profesor, name='eliminar_profesor'),
     path('editarprofesor/<int:profesor_id>/', profesoresViews.edit_profesor, name='editar_profesor'),
     path('agregar-materia/', profesoresViews.agregar_materia, name='agregar_materia'),
+    path('estadisticas/', profesoresViews.estadisticas, name='estadisticas'),
 
     
     # Nuevas rutas para "Mis Comentarios", editar y eliminar reseñas

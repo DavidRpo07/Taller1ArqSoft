@@ -1,29 +1,18 @@
 from django.shortcuts import render, get_object_or_404, redirect
 from django.contrib.auth.decorators import login_required, user_passes_test
-from django.db.models import Q
 import csv
 from django.contrib import messages
-from .models import Profesor, UploadCSVForm, ProfesorForm, Materia, MateriaForm  # Importar el modelo Profesor
+from .models import Profesor, UploadCSVForm, ProfesorForm, Materia, MateriaForm  
 from review.models import Comentario
-from django.conf import settings
-from django.http import HttpResponseForbidden
 from django.contrib import messages
-from account.models import UserProfile
-from django.contrib.auth.models import User
 import matplotlib.pyplot as plt
 import matplotlib
 import io 
-from io import BytesIO
-import urllib
-import base64
-import numpy as np
-import os
-#from bokeh.plotting import figure
-#from bokeh.embed import components
+import urllib, base64
 from collections import Counter
-from review.models import Comentario
-from django.http import HttpResponse
+from django.db.models import Avg, Count, Q
 from collections import defaultdict
+import numpy as np
 
 
 def is_admin(user):
@@ -306,3 +295,160 @@ def agregar_materia(request):
         form = MateriaForm()
     
     return render(request, 'profesores/agregar_materia.html', {'form': form})
+
+def generar_grafico_dispersion(materia):
+    matplotlib.use('Agg')
+    # Intentar obtener la materia seleccionada o devolver un error si no existe
+    try:
+        materia_obj = Materia.objects.get(nombre=materia)
+    except Materia.DoesNotExist:
+        return None  # Devolver None si la materia no existe
+
+    # Obtener los profesores que imparten esta materia con sus calificaciones promedio
+    profesores_con_calificacion = (
+        Profesor.objects
+        .filter(materias=materia_obj)
+        .annotate(
+            calificacion_promedio=Avg('comentarios__rating', filter=Q(comentarios__materia=materia_obj)),
+            num_reviews=Count('comentarios', filter=Q(comentarios__materia=materia_obj))
+        )
+    )
+
+    # Preparar datos para el gráfico
+    nombres_profesores = [prof.nombre for prof in profesores_con_calificacion]
+    calificaciones_promedio = [prof.calificacion_promedio for prof in profesores_con_calificacion]
+    num_reviews = [prof.num_reviews for prof in profesores_con_calificacion]
+
+    # Crear el gráfico de dispersión
+    plt.figure(figsize=(10, 6))
+    plt.scatter(nombres_profesores, calificaciones_promedio, s=[n * 10 for n in num_reviews], alpha=0.5)
+    plt.xlabel("Profesor")
+    plt.ylabel("Calificación promedio")
+    plt.title(f"Calificación promedio de profesores en {materia}")
+    plt.xticks(rotation=45, ha='right')
+
+    # Guardar el gráfico en memoria para enviarlo al template
+    buffer = io.BytesIO()
+    plt.savefig(buffer, format='png')
+    buffer.seek(0)
+    image_png = buffer.getvalue()
+    buffer.close()
+    plt.close()
+
+    # Codificar la imagen en base64 para enviarla al HTML
+    graph = base64.b64encode(image_png).decode('utf-8')
+
+    return graph
+
+def generar_grafico_distribucion_frecuencias(materia):
+    # Obtener la materia seleccionada o devolver None si no existe
+    try:
+        materia_obj = Materia.objects.get(nombre=materia)
+    except Materia.DoesNotExist:
+        return None
+
+    # Obtener los ratings de todos los comentarios asociados a la materia
+    ratings = Comentario.objects.filter(materia=materia_obj).values_list('rating', flat=True)
+
+    # Verificar si hay ratings para la materia
+    if not ratings:
+        return None
+
+    # Contar la frecuencia de cada rating usando Counter
+    rating_counts = Counter(ratings)
+    ratings_list = [rating_counts.get(rating, 0) for rating in range(1, 6)]  # Frecuencia para ratings 1 a 5
+
+    # Crear el gráfico de barras para la distribución de frecuencias
+    plt.figure(figsize=(10, 6))
+    plt.bar(range(1, 6), ratings_list, color='skyblue', edgecolor='black')
+    plt.xlabel("Rating")
+    plt.ylabel("Frecuencia")
+    plt.title(f"Distribución de Frecuencias de Ratings para {materia}")
+    plt.xticks(range(1, 6))
+    max_y = max(ratings_list) + 1  # Definir el límite superior del eje y
+    plt.yticks(np.arange(0, max_y + 1, 1))  # Crear ticks de 1 en 1 hasta el valor máximo
+
+    # Guardar el gráfico en memoria para enviarlo al template
+    buffer = io.BytesIO()
+    plt.savefig(buffer, format='png')
+    buffer.seek(0)
+    image_png = buffer.getvalue()
+    buffer.close()
+    plt.close()
+
+    # Codificar la imagen en base64 para enviarla al HTML
+    graph = base64.b64encode(image_png).decode('utf-8')
+
+    return graph
+
+def grafica_promedio_rating_por_semestre(materia):
+    if not materia:
+        return None  # Retorna None si la materia es None
+
+    # Configurar matplotlib para trabajar sin entorno gráfico
+    matplotlib.use('Agg')
+
+    # Obtener los comentarios de la materia seleccionada y agrupar calificaciones por semestre
+    comentarios = Comentario.objects.filter(materia=materia)
+    calificaciones_por_semestre = defaultdict(list)
+    for comentario in comentarios:
+        calificaciones_por_semestre[comentario.fecha].append(comentario.rating)
+
+    # Calcular el promedio por semestre
+    semestres_ordenados = sorted(calificaciones_por_semestre.keys())  # Ordenar cronológicamente
+    calificaciones_promedio = [
+        sum(calificaciones_por_semestre[semestre]) / len(calificaciones_por_semestre[semestre])
+        for semestre in semestres_ordenados
+    ]
+
+    # Generar la gráfica de líneas
+    plt.figure(figsize=(10, 5))
+    plt.plot(semestres_ordenados, calificaciones_promedio, marker='o', linestyle='-', color='blue')
+    plt.xlabel('Semestre', fontsize=12)
+    plt.ylabel('Rating Promedio', fontsize=12)
+    plt.title(f'Promedio de Rating por Semestre para {materia.nombre}', fontsize=14)
+    plt.grid(axis='y', linestyle='--', alpha=0.7)
+    plt.xticks(rotation=45)
+
+    # Guardar la gráfica en formato base64
+    buffer = io.BytesIO()
+    plt.savefig(buffer, format='png', bbox_inches='tight')
+    buffer.seek(0)
+    image_base64 = base64.b64encode(buffer.getvalue()).decode('utf-8')
+    buffer.close()
+    plt.close()
+    return image_base64
+
+
+def estadisticas(request):
+    # Obtener todas las materias para la lista desplegable
+    materias = Materia.objects.all()
+
+    # Obtener la materia seleccionada del formulario o una por defecto
+    materia_nombre = request.GET.get('materia')
+    
+    # Intentar obtener el objeto de la materia seleccionada
+    materia_seleccionada = Materia.objects.filter(nombre=materia_nombre).first()
+
+    # Generar los gráficos solo si la materia existe
+    if materia_seleccionada:
+        grafico_dispersion = generar_grafico_dispersion(materia_seleccionada)
+        grafico_distribucion = generar_grafico_distribucion_frecuencias(materia_seleccionada)
+        grafica_promedio = grafica_promedio_rating_por_semestre(materia_seleccionada)
+        error_message = None
+    else:
+        # Si no se seleccionó una materia válida, mostrar un mensaje de error
+        grafico_dispersion = None
+        grafico_distribucion = None
+        grafica_promedio = None
+        error_message = "Selecciona una materia válida"
+
+    context = {
+        'grafico_dispersion': grafico_dispersion,
+        'grafico_distribucion': grafico_distribucion,
+        'grafica_promedio': grafica_promedio,
+        'materia_seleccionada': materia_nombre,
+        'materias': materias,
+        'error_message': error_message,
+    }
+    return render(request, 'profesores/estadisticas.html', context)
