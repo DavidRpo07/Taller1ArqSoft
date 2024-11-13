@@ -6,8 +6,11 @@
 ### Download as a zip file or with git clone the repository with this command:
 ### git clone https://github.com/Miguel107/ProfePulse.git
 ### Create a file named keys.env in the main project folder. It should look like this
- OPENAI_API_KEY = 'your_openai_api_key' 
-### replace "your_openai_api_key" with a valid key
+ OPENAI_API_KEY = 'your_openai_api_key'
+ EMAIL_HOST= 'smtp.gmail.com'
+ EMAIL_HOST_USER= 'your_gmail'
+ EMAIL_HOST_PASSWORD= 'your_password_app'
+
 
 ## How to run it?
 ### 1. Go to the directory
