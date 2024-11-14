@@ -3,4 +3,3 @@ Pillow
 openai==0.28
 python-dotenv
 matplotlib
-bokeh

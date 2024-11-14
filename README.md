@@ -3,6 +3,8 @@
 ## David Restrepo, Sebastián Castaño & Miguel Arcila
 
 ## How to install? 
+## Download python version 3.11
+## Download git
 ### Download as a zip file or with git clone the repository with this command:
 ### git clone https://github.com/Miguel107/ProfePulse.git
 ### Create a file named keys.env in the main project folder. It should look like this

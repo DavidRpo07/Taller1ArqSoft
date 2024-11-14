@@ -8,38 +8,49 @@ from django.conf import settings
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth.decorators import user_passes_test
 import random # Para generar un codigo de confirmación
-
+from django.db import IntegrityError
 
 
 def register(request):
     if request.method == 'POST':
         form = FormularioRegistro(request.POST)
         if form.is_valid():
-            codigo = random.randint(100000, 999999)
-            pending_user = PendingUser.objects.create(
-                email=form.cleaned_data['email'],
-                username=form.cleaned_data['username'],
-                first_name=form.cleaned_data['first_name'],
-                last_name=form.cleaned_data['last_name'],
-                password=form.cleaned_data['password1'],  # La contraseña se encripta luego
-                confirmation_code=str(codigo),
-            )
+            # Verificar si el nombre de usuario o el correo ya existen
+            username = form.cleaned_data['username']
+            email = form.cleaned_data['email']
 
-            # Enviar el correo con el código de confirmación
-            send_mail(
-                'Código de Confirmación',
-                f'Tu código de confirmación es: {pending_user.confirmation_code}',
-                'profepulse@gmail.com',
-                [pending_user.email],
-                fail_silently=False,
-            )
+            if PendingUser.objects.filter(username=username).exists():
+                form.add_error('username', 'Este nombre de usuario ya está en uso.')
+            elif PendingUser.objects.filter(email=email).exists():
+                form.add_error('email', 'Este correo ya está en uso.')
+            else:
+                # Si no existen, procede a crear el usuario pendiente
+                codigo = random.randint(100000, 999999)
+                pending_user = PendingUser.objects.create(
+                    email=email,
+                    username=username,
+                    first_name=form.cleaned_data['first_name'],
+                    last_name=form.cleaned_data['last_name'],
+                    password=form.cleaned_data['password1'],  # La contraseña se encripta luego
+                    confirmation_code=str(codigo),
+                )
 
-            messages.success(request, 'Hemos enviado un código de confirmación a tu correo. Por favor, verifica.')
-            return redirect('confirmar_cuenta')  # Redirigir a la vista de confirmación
+                # Enviar el correo con el código de confirmación
+                send_mail(
+                    'Código de Confirmación',
+                    f'Tu código de confirmación es: {pending_user.confirmation_code}',
+                    'profepulse@gmail.com',
+                    [pending_user.email],
+                    fail_silently=False,
+                )
+
+                messages.success(request, 'Hemos enviado un código de confirmación a tu correo. Por favor, verifica.')
+                return redirect('confirmar_cuenta')  # Redirigir a la vista de confirmación
     else:
         form = FormularioRegistro()
 
     return render(request, 'registro/register.html', {'form': form})
+
 
 def confirmar_cuenta(request):
     if request.method == 'POST':
