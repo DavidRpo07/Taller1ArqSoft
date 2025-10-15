@@ -102,4 +102,5 @@ def user_profile(request, user_id):
         'user_profile': user_profile,
         'is_admin': is_admin,
         'usuario': usuario,
+        'mensaje_estado': user_profile.mensaje_estado(),
     })

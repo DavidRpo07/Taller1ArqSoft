@@ -21,6 +21,30 @@ def is_admin(user):
     return user.is_staff
 
 
+class ComentarioAprobador:
+    def aprobar(self, comentario):
+        raise NotImplementedError("Debes implementar el método aprobar.")
+
+class ComentarioAprobadorManual(ComentarioAprobador):
+    def aprobar(self, comentario):
+        return True
+
+class ComentarioAprobadorIA(ComentarioAprobador):
+    def aprobar(self, comentario):
+        openai.api_key = os.environ.get('OPENAI_API_KEY')
+        respuesta = openai.ChatCompletion.create(
+            model="gpt-4",
+            messages=[
+                {"role": "system", "content": "Eres un asistente que revisa comentarios para identificar si contienen palabras ofensivas."},
+                {"role": "user", "content": f"Revisa el siguiente comentario y devuelve 'aprobado' si es apropiado o 'no' si contiene palabras ofensivas:\n\nComentario: \"{comentario}\""}
+            ],
+            max_tokens=3,
+            temperature=0
+        )
+        resultado = respuesta['choices'][0]['message']['content'].strip().lower()
+        return resultado == 'aprobado'
+
+
 def revisar_comentario_por_ia(contenido):    
         respuesta = openai.ChatCompletion.create(
         model="gpt-4",  
@@ -76,9 +100,9 @@ def agregar_comentario(request, profesor_id):
     # Obtener el UserProfile del usuario actual
     user_profile = UserProfile.objects.get_or_create(user=request.user)[0]
     
-    # Verificar si el usuario está suspendido
-    if user_profile.is_suspended:
-        messages.error(request, 'Tu cuenta está suspendida y no puedes agregar comentarios.')
+    # Usar el patrón State para verificar si puede acceder
+    if not user_profile.puede_acceder():
+        messages.error(request, user_profile.mensaje_estado() + ' No puedes agregar comentarios.')
         return redirect('detalle_profesor', profesor_id=profesor.id)
     
     if request.method == 'POST':
@@ -92,8 +116,8 @@ def agregar_comentario(request, profesor_id):
             es_anonimo = request.POST.get('anonimo') == 'on'
             comentario.anonimo = es_anonimo  # Marcar como anónimo
             
-            # Revisamos el comentario con la IA
-            aprobado = revisar_comentario_por_ia(comentario.contenido)
+            aprobador = ComentarioAprobadorManual()  # Se puede cambiar por ComentarioAprobadorManual()
+            aprobado = aprobador.aprobar(comentario.contenido)
             if aprobado:
                 comentario.aprobado_por_ia = True
                 comentario.save()
