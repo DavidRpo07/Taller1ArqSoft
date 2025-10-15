@@ -17,34 +17,18 @@ matplotlib.use('Agg')
 
 
 class ChartGenerator(ABC):
-    """
-    Clase base abstracta para generadores de gráficas.
-    Define la interfaz común para todos los tipos de gráficas.
-    """
+    # Clase base abstracta para generadores de gráficas.
+    # Define la interfaz común para todos los tipos de gráficas.
+
     
     @abstractmethod
     def generate(self, data):
-        """
-        Genera una gráfica específica basada en los datos proporcionados.
+        # Genera una gráfica específica basada en los datos proporcionados.
         
-        Args:
-            data: Datos necesarios para generar la gráfica (varía según el tipo)
-            
-        Returns:
-            str: Imagen codificada en base64
-        """
         pass
     
     def to_base64(self, plt_figure):
-        """
-        Método común para convertir una figura de matplotlib a base64.
-        
-        Args:
-            plt_figure: Instancia de matplotlib.pyplot
-            
-        Returns:
-            str: Imagen codificada en base64
-        """
+        # Método común para convertir una figura de matplotlib a base64.
         buffer = io.BytesIO()
         plt_figure.savefig(buffer, format='png', bbox_inches='tight')
         buffer.seek(0)
@@ -55,19 +39,10 @@ class ChartGenerator(ABC):
 
 
 class BarChartGenerator(ChartGenerator):
-    """
-    Generador de gráficas de barras para distribución de ratings.
-    Muestra la frecuencia de cada calificación (1-5 estrellas).
-    """
+    # Muestra la frecuencia de cada calificación (1-5 estrellas).
+    
     
     def generate(self, ratings):
-        """
-        Args:
-            ratings (list): Lista de calificaciones numéricas
-            
-        Returns:
-            str: Gráfica en base64
-        """
         if not ratings:
             return None
             
@@ -89,19 +64,11 @@ class BarChartGenerator(ChartGenerator):
 
 
 class LineChartGenerator(ChartGenerator):
-    """
-    Generador de gráficas de líneas para evolución temporal.
-    Muestra cómo varía la calificación promedio a lo largo de los semestres.
-    """
+
+    # Muestra cómo varía la calificación promedio a lo largo de los semestres.
+
     
     def generate(self, comentarios):
-        """
-        Args:
-            comentarios (QuerySet): Comentarios con campos 'fecha' y 'rating'
-            
-        Returns:
-            str: Gráfica en base64
-        """
         if not comentarios or not comentarios.exists():
             return None
             
@@ -128,19 +95,9 @@ class LineChartGenerator(ChartGenerator):
 
 
 class ScatterChartGenerator(ChartGenerator):
-    """
-    Generador de gráficas de dispersión para comparar profesores.
-    El tamaño de cada punto representa el número de reseñas.
-    """
+    # El tamaño de cada punto representa el número de reseñas.
     
     def generate(self, profesores_data):
-        """
-        Args:
-            profesores_data (QuerySet): Profesores anotados con calificación y número de reseñas
-            
-        Returns:
-            str: Gráfica en base64
-        """
         if not profesores_data or not profesores_data.exists():
             return None
             
@@ -162,19 +119,9 @@ class ScatterChartGenerator(ChartGenerator):
 
 
 class FrequencyDistributionChartGenerator(ChartGenerator):
-    """
-    Generador de gráficas de distribución de frecuencias para materias.
-    Similar al BarChart pero con configuración específica para materias.
-    """
+    # Generador de gráficas de distribución de frecuencias para materias.
     
     def generate(self, ratings):
-        """
-        Args:
-            ratings (list): Lista de calificaciones numéricas de una materia
-            
-        Returns:
-            str: Gráfica en base64
-        """
         if not ratings:
             return None
             
@@ -195,18 +142,9 @@ class FrequencyDistributionChartGenerator(ChartGenerator):
 
 
 class SemesterLineChartGenerator(ChartGenerator):
-    """
-    Generador de gráficas de líneas para evolución por semestre de materias.
-    """
+    # Generador de gráficas de líneas para evolución por semestre de materias.
     
     def generate(self, data):
-        """
-        Args:
-            data (dict): Diccionario con 'comentarios' y 'titulo'
-            
-        Returns:
-            str: Gráfica en base64
-        """
         comentarios = data.get('comentarios')
         titulo = data.get('titulo', 'Promedio de Rating por Semestre')
         
@@ -237,10 +175,7 @@ class SemesterLineChartGenerator(ChartGenerator):
 
 
 class ChartFactory:
-    """
-    Factory para crear y generar diferentes tipos de gráficas.
-    Implementa el patrón Factory Method.
-    """
+    # Implementa el patrón Factory Method.
     
     # Registro de generadores disponibles
     _generators = {
@@ -253,19 +188,8 @@ class ChartFactory:
     
     @classmethod
     def create_chart(cls, chart_type, data):
-        """
-        Crea y genera una gráfica del tipo especificado.
+        # Crea y genera una gráfica del tipo especificado.
         
-        Args:
-            chart_type (str): Tipo de gráfica ('bar', 'line', 'scatter', 'frequency', 'semester_line')
-            data: Los datos necesarios para generar la gráfica
-            
-        Returns:
-            str: Imagen codificada en base64 o None si hay error
-            
-        Raises:
-            ValueError: Si el tipo de gráfica no está soportado
-        """
         generator_class = cls._generators.get(chart_type)
         if not generator_class:
             raise ValueError(f"Tipo de gráfica no soportado: {chart_type}. "
@@ -280,24 +204,12 @@ class ChartFactory:
     
     @classmethod
     def register_chart_type(cls, name, generator_class):
-        """
-        Permite registrar nuevos tipos de gráficas dinámicamente.
-        Útil para extensiones futuras sin modificar esta clase.
-        
-        Args:
-            name (str): Nombre identificador del nuevo tipo
-            generator_class (ChartGenerator): Clase generadora que hereda de ChartGenerator
-        """
+        # Permite registrar nuevos tipos de gráficas dinámicamente.
         if not issubclass(generator_class, ChartGenerator):
             raise TypeError("El generador debe heredar de ChartGenerator")
         cls._generators[name] = generator_class
     
     @classmethod
     def get_available_types(cls):
-        """
-        Retorna la lista de tipos de gráficas disponibles.
-        
-        Returns:
-            list: Lista de nombres de tipos disponibles
-        """
+        # Retorna la lista de tipos de gráficas disponibles.
         return list(cls._generators.keys())

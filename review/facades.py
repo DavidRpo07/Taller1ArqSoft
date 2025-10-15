@@ -1,4 +1,3 @@
-# review/facades.py
 """
 Implementación del patrón Facade para el sistema de comentarios.
 Simplifica las operaciones complejas relacionadas con la creación, edición y 
@@ -13,37 +12,20 @@ from collections import Counter, defaultdict
 
 
 class ComentarioFacade:
-    """
-    Fachada que simplifica las operaciones complejas del sistema de comentarios.
-    Coordina: validación de permisos (State), aprobación IA, persistencia y estadísticas.
-    
-    Este patrón oculta la complejidad de múltiples subsistemas detrás de una
-    interfaz simple y unificada.
-    """
+    # Fachada que simplifica las operaciones complejas del sistema de comentarios.
+    # Coordina: validación de permisos (State), aprobación IA, persistencia y estadísticas.
     
     def __init__(self, aprobador_strategy=None):
-        """
-        Inicializa la fachada con una estrategia de aprobación.
-        
-        Args:
-            aprobador_strategy: Instancia de ComentarioAprobador (IA o Manual).
-                               Si no se proporciona, usa ComentarioAprobadorIA por defecto.
-        """
+        # Inicializa la fachada con una estrategia de aprobación.
+    
         # Import here to avoid circular dependency
         from review.views import ComentarioAprobadorIA
         self.aprobador = aprobador_strategy or ComentarioAprobadorIA()
     
     def puede_usuario_comentar(self, user):
-        """
-        Verifica si el usuario tiene permisos para comentar.
-        Utiliza el patrón State existente en UserProfile.
-        
-        Args:
-            user: Usuario de Django
-            
-        Returns:
-            tuple: (puede_comentar: bool, mensaje: str)
-        """
+        # Verifica si el usuario tiene permisos para comentar.
+        # Utiliza el patrón State existente en UserProfile.
+
         try:
             user_profile, _ = UserProfile.objects.get_or_create(user=user)
             
@@ -57,20 +39,8 @@ class ComentarioFacade:
     
     @transaction.atomic
     def crear_comentario(self, form_data, profesor, usuario, es_anonimo=False):
-        """
-        Crea y procesa un comentario completo (validación + aprobación + guardado).
-        Usa transacciones atómicas para garantizar consistencia.
-        
-        Args:
-            form_data (dict): Datos del formulario validado con keys:
-                             'contenido', 'rating', 'fecha', 'materia' (opcional)
-            profesor: Instancia del profesor
-            usuario: Usuario que comenta
-            es_anonimo (bool): Si el comentario es anónimo
-            
-        Returns:
-            tuple: (exito: bool, comentario: Comentario|None, mensaje: str)
-        """
+        # Crea y procesa un comentario completo (validación + aprobación + guardado).
+
         # 1. Verificar permisos usando patrón State
         puede_comentar, mensaje_permiso = self.puede_usuario_comentar(usuario)
         if not puede_comentar:
@@ -104,18 +74,8 @@ class ComentarioFacade:
     
     @transaction.atomic
     def editar_comentario(self, comentario_id, usuario, nuevos_datos, re_aprobar=True):
-        """
-        Edita un comentario existente con validaciones.
+        # Edita un comentario existente con validaciones.
         
-        Args:
-            comentario_id (int): ID del comentario a editar
-            usuario: Usuario que edita
-            nuevos_datos (dict): Nuevos datos para el comentario
-            re_aprobar (bool): Si debe re-aprobar con IA cuando cambie el contenido
-            
-        Returns:
-            tuple: (exito: bool, comentario: Comentario|None, mensaje: str)
-        """
         try:
             comentario = Comentario.objects.get(id=comentario_id)
         except Comentario.DoesNotExist:
@@ -157,16 +117,7 @@ class ComentarioFacade:
     
     @transaction.atomic
     def eliminar_comentario(self, comentario_id, usuario):
-        """
-        Elimina un comentario con validaciones.
-        
-        Args:
-            comentario_id (int): ID del comentario a eliminar
-            usuario: Usuario que elimina
-            
-        Returns:
-            tuple: (exito: bool, profesor_id: int|None, mensaje: str)
-        """
+        # Elimina un comentario con validaciones.
         try:
             comentario = Comentario.objects.get(id=comentario_id)
         except Comentario.DoesNotExist:
@@ -185,19 +136,8 @@ class ComentarioFacade:
             return False, None, f'Error al eliminar comentario: {str(e)}'
     
     def obtener_estadisticas_profesor(self, profesor):
-        """
-        Obtiene estadísticas consolidadas de un profesor.
-        
-        Args:
-            profesor: Instancia del profesor
-            
-        Returns:
-            dict: Estadísticas del profesor con keys:
-                  - total_comentarios
-                  - calificacion_promedio
-                  - comentarios_por_semestre
-                  - distribucion_ratings
-        """
+        # Obtiene estadísticas consolidadas de un profesor.
+
         try:
             comentarios = Comentario.objects.filter(profesor=profesor, aprobado_por_ia=True)
             
@@ -217,16 +157,7 @@ class ComentarioFacade:
             }
     
     def obtener_comentarios_usuario(self, usuario, incluir_no_aprobados=False):
-        """
-        Obtiene todos los comentarios de un usuario.
-        
-        Args:
-            usuario: Usuario de Django
-            incluir_no_aprobados (bool): Si incluir comentarios rechazados
-            
-        Returns:
-            QuerySet: Comentarios del usuario
-        """
+        # Obtiene todos los comentarios de un usuario.
         comentarios = Comentario.objects.filter(usuario=usuario)
         
         if not incluir_no_aprobados:
@@ -235,16 +166,7 @@ class ComentarioFacade:
         return comentarios.order_by('-fecha')
     
     def validar_datos_comentario(self, contenido, rating):
-        """
-        Valida los datos básicos de un comentario.
-        
-        Args:
-            contenido (str): Contenido del comentario
-            rating (int): Calificación (1-5)
-            
-        Returns:
-            tuple: (valido: bool, mensaje: str)
-        """
+        # Valida los datos básicos de un comentario.
         if not contenido or len(contenido.strip()) < 10:
             return False, 'El comentario debe tener al menos 10 caracteres.'
         
@@ -259,38 +181,19 @@ class ComentarioFacade:
     # Métodos privados auxiliares
     
     def _agrupar_por_semestre(self, comentarios):
-        """
-        Agrupa comentarios por semestre.
+        # Agrupa comentarios por semestre.
         
-        Args:
-            comentarios (QuerySet): Comentarios a agrupar
-            
-        Returns:
-            dict: Semestre -> [ratings]
-        """
         agrupados = defaultdict(list)
         for c in comentarios:
             agrupados[c.fecha].append(c.rating)
         return dict(agrupados)
     
     def _contar_ratings(self, comentarios):
-        """
-        Cuenta la distribución de ratings.
-        
-        Args:
-            comentarios (QuerySet): Comentarios a contar
-            
-        Returns:
-            dict: Rating -> Frecuencia
-        """
+        # Cuenta la distribución de ratings.
         ratings = [c.rating for c in comentarios]
         return dict(Counter(ratings))
     
     def cambiar_aprobador(self, nuevo_aprobador):
-        """
-        Cambia la estrategia de aprobación en tiempo de ejecución.
-        
-        Args:
-            nuevo_aprobador: Nueva instancia de ComentarioAprobador
-        """
+        # Cambia la estrategia de aprobación en tiempo de ejecución.
+    
         self.aprobador = nuevo_aprobador

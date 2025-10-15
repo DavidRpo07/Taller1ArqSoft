@@ -8,6 +8,8 @@ from review.models import Comentario
 from django.db.models import Avg, Count, Q
 # Importar el ChartFactory para usar el patrón Factory
 from .chart_factory import ChartFactory
+# Importar el RecommendationEngine para usar el patrón Strategy
+from .recommendation_strategies import RecommendationEngine
 
 
 def is_admin(user):
@@ -15,7 +17,10 @@ def is_admin(user):
 
 
 def lista_profesores(request):
-    searchNombre = request.GET.get('searchNombre', '').strip()  # Elimina espacios en blanco adicionales
+    """
+    Lista profesores con filtros y sistema de recomendación usando patrón Strategy.
+    """
+    searchNombre = request.GET.get('searchNombre', '').strip()
     searchMateria = request.GET.get('searchMateria', '').strip()
     orden_field = request.GET.get('orden_field', '')
 
@@ -30,16 +35,26 @@ def lista_profesores(request):
     if searchMateria:
         profesores = profesores.filter(materias__nombre__icontains=searchMateria).distinct()
 
-    # Aplicar la ordenación según el criterio seleccionado
+    # Sistema de Recomendación usando patrón Strategy
     if orden_field:
-        if orden_field == 'mayor_rating':
-            profesores = profesores.order_by('-calificacion_media')  # Ordena por mayor rating (descendente)
-        elif orden_field == 'menor_rating':
-            profesores = profesores.order_by('calificacion_media')   # Ordena por menor rating (ascendente)
-        elif orden_field == 'mayor_comentarios':
-            profesores = profesores.order_by('-numcomentarios')  # Ordena por más comentarios (descendente)
-        elif orden_field == 'menor_comentarios':
-            profesores = profesores.order_by('numcomentarios')   # Ordena por menos comentarios (ascendente)
+        # Mapeo de valores del frontend a estrategias
+        strategy_map = {
+            'mayor_rating': 'best_rated',
+            'menor_rating': 'alphabetical',  # fallback
+            'mayor_comentarios': 'most_reviewed',
+            'menor_comentarios': 'alphabetical',  # fallback
+            'recomendado': 'balanced',  # Nueva opción
+        }
+        
+        strategy_name = strategy_map.get(orden_field, 'best_rated')
+        
+        # Crear motor de recomendación con la estrategia seleccionada
+        recommendation_engine = RecommendationEngine(strategy_name)
+        profesores = recommendation_engine.recommend(profesores)
+    else:
+        # Por defecto: usar estrategia de mejor calificados primero
+        recommendation_engine = RecommendationEngine('best_rated')
+        profesores = recommendation_engine.recommend(profesores)
 
     return render(request, 'lista_profesores.html', {
         'profesores': profesores,

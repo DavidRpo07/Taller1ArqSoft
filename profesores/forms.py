@@ -1,4 +1,3 @@
-# profesores/forms.py
 """
 Formularios para la aplicación de profesores.
 Movidos desde models.py para respetar el principio de separación de responsabilidades.
@@ -9,15 +8,13 @@ from .models import Profesor, Materia
 
 
 class UploadCSVForm(forms.Form):
-    """Formulario para subir archivos CSV con datos de profesores"""
+    # Formulario para subir archivos CSV con datos de profesorer
     file = forms.FileField(label='Subir archivo CSV')
 
 
 class ProfesorForm(forms.ModelForm):
-    """
-    Formulario para crear y editar profesores.
-    Incluye integración con Select2 para selección múltiple de materias.
-    """
+    # Formulario para crear y editar profesores.
+
     materias = forms.ModelMultipleChoiceField(
         queryset=Materia.objects.all(),
         widget=forms.SelectMultiple(attrs={
@@ -34,7 +31,7 @@ class ProfesorForm(forms.ModelForm):
 
 
 class MateriaForm(forms.ModelForm):
-    """Formulario para crear y editar materias"""
+    # Formulario para crear y editar materias
     
     class Meta:
         model = Materia

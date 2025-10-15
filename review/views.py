@@ -96,10 +96,6 @@ def home(request):
 # Vista para agregar un comentario a un profesor
 @login_required
 def agregar_comentario(request, profesor_id):
-    """
-    Vista simplificada usando el patrón Facade.
-    La lógica compleja se delega a ComentarioFacade.
-    """
     from review.forms import ComentarioForm
     profesor = get_object_or_404(Profesor, pk=profesor_id)
     
@@ -159,10 +155,6 @@ def delete_review(request, comentario_id):
 # Vista para editar una reseña (solo si es el propietario)
 @login_required
 def edit_review(request, comentario_id):
-    """
-    Vista simplificada usando el patrón Facade.
-    La lógica de edición se delega a ComentarioFacade.
-    """
     from review.forms import ComentarioForm
     
     # Crear instancia de la fachada
@@ -202,10 +194,6 @@ def edit_review(request, comentario_id):
 # Vista para eliminar una reseña (solo si es el propietario)
 @login_required
 def delete_own_review(request, comentario_id):
-    """
-    Vista simplificada usando el patrón Facade.
-    La lógica de eliminación se delega a ComentarioFacade.
-    """
     # Crear instancia de la fachada
     facade = ComentarioFacade()
     
