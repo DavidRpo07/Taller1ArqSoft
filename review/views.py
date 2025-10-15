@@ -10,6 +10,8 @@ from account.models import UserProfile
 from django.contrib.auth.models import User
 from django.db.models import Avg
 from dotenv import load_dotenv, find_dotenv
+# Importar la Facade para usar el patrón Facade
+from .facades import ComentarioFacade
 
 _ = load_dotenv('keys.env')
 # Inicializar el cliente de OpenAI
@@ -94,39 +96,42 @@ def home(request):
 # Vista para agregar un comentario a un profesor
 @login_required
 def agregar_comentario(request, profesor_id):
+    """
+    Vista simplificada usando el patrón Facade.
+    La lógica compleja se delega a ComentarioFacade.
+    """
     from review.forms import ComentarioForm
     profesor = get_object_or_404(Profesor, pk=profesor_id)
     
-    # Obtener el UserProfile del usuario actual
-    user_profile = UserProfile.objects.get_or_create(user=request.user)[0]
+    # Crear instancia de la fachada
+    facade = ComentarioFacade()
     
-    # Usar el patrón State para verificar si puede acceder
-    if not user_profile.puede_acceder():
-        messages.error(request, user_profile.mensaje_estado() + ' No puedes agregar comentarios.')
+    # Verificar permisos usando la fachada (que usa el patrón State internamente)
+    puede_comentar, mensaje = facade.puede_usuario_comentar(request.user)
+    if not puede_comentar:
+        messages.error(request, mensaje)
         return redirect('detalle_profesor', profesor_id=profesor.id)
     
     if request.method == 'POST':
-        form = ComentarioForm(request.POST, profesor=profesor)  # Pasa el profesor al formulario
+        form = ComentarioForm(request.POST, profesor=profesor)
         if form.is_valid():
-            comentario = form.save(commit=False)
-            comentario.profesor = profesor
-            comentario.usuario = request.user  # Siempre asignar el usuario
-
-            # Revisar si el comentario es anónimo
             es_anonimo = request.POST.get('anonimo') == 'on'
-            comentario.anonimo = es_anonimo  # Marcar como anónimo
             
-            aprobador = ComentarioAprobadorManual()  # Se puede cambiar por ComentarioAprobadorManual()
-            aprobado = aprobador.aprobar(comentario.contenido)
-            if aprobado:
-                comentario.aprobado_por_ia = True
-                comentario.save()
-                messages.success(request, 'Tu comentario ha sido aprobado y publicado.')
+            # Delegar toda la lógica compleja a la fachada
+            exito, comentario, mensaje = facade.crear_comentario(
+                form_data=form.cleaned_data,
+                profesor=profesor,
+                usuario=request.user,
+                es_anonimo=es_anonimo
+            )
+            
+            if exito:
+                messages.success(request, mensaje)
                 return redirect('detalle_profesor', profesor_id=profesor.id)
             else:
-                form.add_error(None, "Tu comentario ha sido rechazado por no cumplir con las normas.")
+                messages.error(request, mensaje)
     else:
-        form = ComentarioForm(profesor=profesor)  # Pasa el profesor al formulario
+        form = ComentarioForm(profesor=profesor)
     
     return render(request, 'review/agregar_comentario.html', {
         'form': form,
@@ -154,34 +159,71 @@ def delete_review(request, comentario_id):
 # Vista para editar una reseña (solo si es el propietario)
 @login_required
 def edit_review(request, comentario_id):
+    """
+    Vista simplificada usando el patrón Facade.
+    La lógica de edición se delega a ComentarioFacade.
+    """
     from review.forms import ComentarioForm
+    
+    # Crear instancia de la fachada
+    facade = ComentarioFacade()
+    
+    # Obtener el comentario para mostrar en el formulario
     comentario = get_object_or_404(Comentario, id=comentario_id)
     
-    # Verificar que el usuario actual sea el propietario del comentario
+    # Verificar permisos básicos antes de procesar
     if comentario.usuario != request.user and not request.user.is_staff:
-        return HttpResponseForbidden()  # Retorna un error 403 si el usuario no es el propietario o admin
+        return HttpResponseForbidden()
     
-    # Si el método es POST, procesamos el formulario
     if request.method == 'POST':
-        form = ComentarioForm(request.POST, instance=comentario)
+        form = ComentarioForm(request.POST, instance=comentario, profesor=comentario.profesor)
         if form.is_valid():
-            form.save()  # Guardar los cambios
-            return redirect('mis_comentarios', user_id=request.user.id)  # Redirigir a la página de "Mis Comentarios"
+            # Usar la fachada para editar el comentario
+            exito, comentario_editado, mensaje = facade.editar_comentario(
+                comentario_id=comentario_id,
+                usuario=request.user,
+                nuevos_datos=form.cleaned_data
+            )
+            
+            if exito:
+                messages.success(request, mensaje)
+                return redirect('mis_comentarios', user_id=request.user.id)
+            else:
+                messages.error(request, mensaje)
     else:
-        # Si es un GET, mostrar el formulario con los datos actuales del comentario
-        form = ComentarioForm(instance=comentario)
+        form = ComentarioForm(instance=comentario, profesor=comentario.profesor)
     
-    return render(request, 'review/edit_review.html', {'form': form, 'comentario': comentario, 'usuario': request.user})
+    return render(request, 'review/edit_review.html', {
+        'form': form,
+        'comentario': comentario,
+        'usuario': request.user
+    })
 
 # Vista para eliminar una reseña (solo si es el propietario)
 @login_required
 def delete_own_review(request, comentario_id):
-    comentario = get_object_or_404(Comentario, id=comentario_id)
-    if comentario.usuario != request.user:
-        return HttpResponseForbidden()  # Solo el propietario del comentario puede eliminarlo
+    """
+    Vista simplificada usando el patrón Facade.
+    La lógica de eliminación se delega a ComentarioFacade.
+    """
+    # Crear instancia de la fachada
+    facade = ComentarioFacade()
     
-    comentario.delete()
-    return redirect('detalle_profesor', profesor_id=comentario.profesor.id)
+    # Usar la fachada para eliminar el comentario
+    exito, profesor_id, mensaje = facade.eliminar_comentario(
+        comentario_id=comentario_id,
+        usuario=request.user
+    )
+    
+    if exito:
+        messages.success(request, mensaje)
+        if profesor_id:
+            return redirect('detalle_profesor', profesor_id=profesor_id)
+        else:
+            return redirect('home')
+    else:
+        messages.error(request, mensaje)
+        return redirect('home')
 
 # Vista para mostrar "Mis comentarios"
 @login_required
