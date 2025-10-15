@@ -2,17 +2,14 @@ from django.shortcuts import render, get_object_or_404, redirect
 from django.contrib.auth.decorators import login_required, user_passes_test
 import csv
 from django.contrib import messages
-from .models import Profesor, UploadCSVForm, ProfesorForm, Materia, MateriaForm  
+from .models import Profesor, Materia
+from .forms import UploadCSVForm, ProfesorForm, MateriaForm
 from review.models import Comentario
-from django.contrib import messages
-import matplotlib.pyplot as plt
-import matplotlib
-import io 
-import urllib, base64
-from collections import Counter
 from django.db.models import Avg, Count, Q
-from collections import defaultdict
-import numpy as np
+# Importar el ChartFactory para usar el patrón Factory
+from .chart_factory import ChartFactory
+# Importar el RecommendationEngine para usar el patrón Strategy
+from .recommendation_strategies import RecommendationEngine
 
 
 def is_admin(user):
@@ -20,7 +17,10 @@ def is_admin(user):
 
 
 def lista_profesores(request):
-    searchNombre = request.GET.get('searchNombre', '').strip()  # Elimina espacios en blanco adicionales
+    """
+    Lista profesores con filtros y sistema de recomendación usando patrón Strategy.
+    """
+    searchNombre = request.GET.get('searchNombre', '').strip()
     searchMateria = request.GET.get('searchMateria', '').strip()
     orden_field = request.GET.get('orden_field', '')
 
@@ -35,16 +35,26 @@ def lista_profesores(request):
     if searchMateria:
         profesores = profesores.filter(materias__nombre__icontains=searchMateria).distinct()
 
-    # Aplicar la ordenación según el criterio seleccionado
+    # Sistema de Recomendación usando patrón Strategy
     if orden_field:
-        if orden_field == 'mayor_rating':
-            profesores = profesores.order_by('-calificacion_media')  # Ordena por mayor rating (descendente)
-        elif orden_field == 'menor_rating':
-            profesores = profesores.order_by('calificacion_media')   # Ordena por menor rating (ascendente)
-        elif orden_field == 'mayor_comentarios':
-            profesores = profesores.order_by('-numcomentarios')  # Ordena por más comentarios (descendente)
-        elif orden_field == 'menor_comentarios':
-            profesores = profesores.order_by('numcomentarios')   # Ordena por menos comentarios (ascendente)
+        # Mapeo de valores del frontend a estrategias
+        strategy_map = {
+            'mayor_rating': 'best_rated',
+            'menor_rating': 'alphabetical',  # fallback
+            'mayor_comentarios': 'most_reviewed',
+            'menor_comentarios': 'alphabetical',  # fallback
+            'recomendado': 'balanced',  # Nueva opción
+        }
+        
+        strategy_name = strategy_map.get(orden_field, 'best_rated')
+        
+        # Crear motor de recomendación con la estrategia seleccionada
+        recommendation_engine = RecommendationEngine(strategy_name)
+        profesores = recommendation_engine.recommend(profesores)
+    else:
+        # Por defecto: usar estrategia de mejor calificados primero
+        recommendation_engine = RecommendationEngine('best_rated')
+        profesores = recommendation_engine.recommend(profesores)
 
     return render(request, 'lista_profesores.html', {
         'profesores': profesores,
@@ -52,77 +62,6 @@ def lista_profesores(request):
         'searchMateria': searchMateria,
         'orden_field': orden_field
     })
-
-
-def generar_grafica_barras(ratings):
-    
-    # Configurar matplotlib para trabajar sin entorno gráfico
-    matplotlib.use('Agg')
-    
-    # Crear la figura
-    plt.figure(figsize=(12, 6))
-    
-    # Contar las frecuencias de los ratings
-    counts = dict(Counter(ratings))
-    labels = list(range(1, 6))  # Posibles ratings (1 a 5)
-    values = [counts.get(label, 0) for label in labels]  # Frecuencia por rating
-
-    # Generar la gráfica
-    plt.bar(labels, values, color='skyblue', edgecolor='black', width=0.8)
-    plt.xlabel('Calificación', fontsize=14, fontweight='bold')
-    plt.ylabel('Frecuencia', fontsize=14, fontweight='bold')
-    plt.xticks(labels, fontsize=12)
-    max_y = int(max(counts))
-    plt.yticks(range(0, max_y + 1), fontsize=12)
-    plt.grid(axis='y', linestyle='--', alpha=0.7)
-
-    # Guardar la gráfica como base64
-    buffer = io.BytesIO()
-    plt.savefig(buffer, format='png', bbox_inches='tight')
-    buffer.seek(0)
-    plt.close()
-
-
-    image_png = buffer.getvalue()
-    buffer.close()
-    grafica_barras = base64.b64encode(image_png)
-    grafica_barras = grafica_barras.decode('utf-8')
-
-    return grafica_barras
-
-def grafica_calificaciones_semestre(comentarios):
-
-    # Configurar matplotlib para trabajar sin entorno gráfico
-    matplotlib.use('Agg')
-
-    # Agrupar calificaciones por semestre
-    calificaciones_por_semestre = defaultdict(list)
-    for comentario in comentarios:
-        calificaciones_por_semestre[comentario.fecha].append(comentario.rating)
-
-    # Calcular el promedio por semestre
-    semestres_ordenados = sorted(calificaciones_por_semestre.keys(), reverse=False)  # Ordenar cronológicamente
-    calificaciones_promedio = [
-        sum(calificaciones_por_semestre[semestre]) / len(calificaciones_por_semestre[semestre])
-        for semestre in semestres_ordenados
-    ]
-
-    # Generar la gráfica
-    plt.figure(figsize=(10, 5))
-    plt.plot(semestres_ordenados, calificaciones_promedio, marker='o', linestyle='-', color='blue')
-    plt.xlabel('Semestre', fontsize=12)
-    plt.ylabel('Rating Promedio', fontsize=12)
-    plt.grid(axis='y', linestyle='--', alpha=0.7)
-    plt.xticks(rotation=45)
-
-    # Guardar la gráfica como base64
-    buffer = io.BytesIO()
-    plt.savefig(buffer, format='png', bbox_inches='tight')
-    buffer.seek(0)
-    plt.close()
-    image_base64 = base64.b64encode(buffer.getvalue()).decode('utf-8')
-    buffer.close()
-    return image_base64
 
 
 def detalle_profesor(request, profesor_id):
@@ -147,14 +86,14 @@ def detalle_profesor(request, profesor_id):
     # Extraer ratings para las gráficas
     ratings_grafica = [comentario.rating for comentario in comentarios_grafica]
 
-    # Gráficas:
+    # Gráficas usando el patrón Factory:
     # Mostrar ambas gráficas si no se filtra por semestre
     # Mostrar solo la gráfica de barras si hay filtro por semestre
-    grafica_barras = generar_grafica_barras(ratings_grafica) if comentarios_grafica.exists() else None
+    grafica_barras = ChartFactory.create_chart('bar', ratings_grafica) if comentarios_grafica.exists() else None
     grafica_por_semestre = None
     if not semestre:
         grafica_por_semestre = (
-            grafica_calificaciones_semestre(comentarios_grafica)
+            ChartFactory.create_chart('line', comentarios_grafica)
             if comentarios_grafica.exists()
             else None
         )
@@ -296,129 +235,6 @@ def agregar_materia(request):
     
     return render(request, 'profesores/agregar_materia.html', {'form': form})
 
-def generar_grafico_dispersion(materia):
-    matplotlib.use('Agg')
-    # Intentar obtener la materia seleccionada o devolver un error si no existe
-    try:
-        materia_obj = Materia.objects.get(nombre=materia)
-    except Materia.DoesNotExist:
-        return None  # Devolver None si la materia no existe
-
-    # Obtener los profesores que imparten esta materia con sus calificaciones promedio
-    profesores_con_calificacion = (
-        Profesor.objects
-        .filter(materias=materia_obj)
-        .annotate(
-            calificacion_promedio=Avg('comentarios__rating', filter=Q(comentarios__materia=materia_obj)),
-            num_reviews=Count('comentarios', filter=Q(comentarios__materia=materia_obj))
-        )
-    )
-
-    # Preparar datos para el gráfico
-    nombres_profesores = [prof.nombre for prof in profesores_con_calificacion]
-    calificaciones_promedio = [prof.calificacion_promedio for prof in profesores_con_calificacion]
-    num_reviews = [prof.num_reviews for prof in profesores_con_calificacion]
-
-    # Crear el gráfico de dispersión
-    plt.figure(figsize=(10, 6))
-    plt.scatter(nombres_profesores, calificaciones_promedio, s=[n * 10 for n in num_reviews], alpha=0.5)
-    plt.xlabel("Profesor")
-    plt.ylabel("Calificación promedio")
-    plt.title(f"Calificación promedio de profesores en {materia}")
-    plt.xticks(rotation=45, ha='right')
-
-    # Guardar el gráfico en memoria para enviarlo al template
-    buffer = io.BytesIO()
-    plt.savefig(buffer, format='png')
-    buffer.seek(0)
-    image_png = buffer.getvalue()
-    buffer.close()
-    plt.close()
-
-    # Codificar la imagen en base64 para enviarla al HTML
-    graph = base64.b64encode(image_png).decode('utf-8')
-
-    return graph
-
-def generar_grafico_distribucion_frecuencias(materia):
-    # Obtener la materia seleccionada o devolver None si no existe
-    try:
-        materia_obj = Materia.objects.get(nombre=materia)
-    except Materia.DoesNotExist:
-        return None
-
-    # Obtener los ratings de todos los comentarios asociados a la materia
-    ratings = Comentario.objects.filter(materia=materia_obj).values_list('rating', flat=True)
-
-    # Verificar si hay ratings para la materia
-    if not ratings:
-        return None
-
-    # Contar la frecuencia de cada rating usando Counter
-    rating_counts = Counter(ratings)
-    ratings_list = [rating_counts.get(rating, 0) for rating in range(1, 6)]  # Frecuencia para ratings 1 a 5
-
-    # Crear el gráfico de barras para la distribución de frecuencias
-    plt.figure(figsize=(10, 6))
-    plt.bar(range(1, 6), ratings_list, color='skyblue', edgecolor='black')
-    plt.xlabel("Rating")
-    plt.ylabel("Frecuencia")
-    plt.title(f"Distribución de Frecuencias de Ratings para {materia}")
-    plt.xticks(range(1, 6))
-    max_y = max(ratings_list) + 1  # Definir el límite superior del eje y
-    plt.yticks(np.arange(0, max_y + 1, 1))  # Crear ticks de 1 en 1 hasta el valor máximo
-
-    # Guardar el gráfico en memoria para enviarlo al template
-    buffer = io.BytesIO()
-    plt.savefig(buffer, format='png')
-    buffer.seek(0)
-    image_png = buffer.getvalue()
-    buffer.close()
-    plt.close()
-
-    # Codificar la imagen en base64 para enviarla al HTML
-    graph = base64.b64encode(image_png).decode('utf-8')
-
-    return graph
-
-def grafica_promedio_rating_por_semestre(materia):
-    if not materia:
-        return None  # Retorna None si la materia es None
-
-    # Configurar matplotlib para trabajar sin entorno gráfico
-    matplotlib.use('Agg')
-
-    # Obtener los comentarios de la materia seleccionada y agrupar calificaciones por semestre
-    comentarios = Comentario.objects.filter(materia=materia)
-    calificaciones_por_semestre = defaultdict(list)
-    for comentario in comentarios:
-        calificaciones_por_semestre[comentario.fecha].append(comentario.rating)
-
-    # Calcular el promedio por semestre
-    semestres_ordenados = sorted(calificaciones_por_semestre.keys())  # Ordenar cronológicamente
-    calificaciones_promedio = [
-        sum(calificaciones_por_semestre[semestre]) / len(calificaciones_por_semestre[semestre])
-        for semestre in semestres_ordenados
-    ]
-
-    # Generar la gráfica de líneas
-    plt.figure(figsize=(10, 5))
-    plt.plot(semestres_ordenados, calificaciones_promedio, marker='o', linestyle='-', color='blue')
-    plt.xlabel('Semestre', fontsize=12)
-    plt.ylabel('Rating Promedio', fontsize=12)
-    plt.title(f'Promedio de Rating por Semestre para {materia.nombre}', fontsize=14)
-    plt.grid(axis='y', linestyle='--', alpha=0.7)
-    plt.xticks(rotation=45)
-
-    # Guardar la gráfica en formato base64
-    buffer = io.BytesIO()
-    plt.savefig(buffer, format='png', bbox_inches='tight')
-    buffer.seek(0)
-    image_base64 = base64.b64encode(buffer.getvalue()).decode('utf-8')
-    buffer.close()
-    plt.close()
-    return image_base64
-
 
 def estadisticas(request):
     # Obtener todas las materias para la lista desplegable
@@ -440,9 +256,28 @@ def estadisticas(request):
     if materia_seleccionada:
         comentarios = Comentario.objects.filter(materia=materia_seleccionada, aprobado_por_ia=True)
         if comentarios.exists():
-            grafico_dispersion = generar_grafico_dispersion(materia_seleccionada)
-            grafico_distribucion = generar_grafico_distribucion_frecuencias(materia_seleccionada)
-            grafica_promedio = grafica_promedio_rating_por_semestre(materia_seleccionada)
+            # Usar ChartFactory con patrón Factory para generar gráficas
+            
+            # Gráfico de dispersión: profesores vs calificaciones
+            profesores_con_calificacion = (
+                Profesor.objects
+                .filter(materias=materia_seleccionada)
+                .annotate(
+                    calificacion_promedio=Avg('comentarios__rating', filter=Q(comentarios__materia=materia_seleccionada)),
+                    num_reviews=Count('comentarios', filter=Q(comentarios__materia=materia_seleccionada))
+                )
+            )
+            grafico_dispersion = ChartFactory.create_chart('scatter', profesores_con_calificacion)
+            
+            # Gráfico de distribución de frecuencias
+            ratings = list(comentarios.values_list('rating', flat=True))
+            grafico_distribucion = ChartFactory.create_chart('frequency', ratings)
+            
+            # Gráfico de promedio por semestre
+            grafica_promedio = ChartFactory.create_chart('semester_line', {
+                'comentarios': comentarios,
+                'titulo': f'Promedio de Rating por Semestre para {materia_seleccionada.nombre}'
+            })
         else:
             error_message = "No hay comentarios disponibles para generar gráficos estadísticos de esta materia."
     else:
