@@ -128,3 +128,21 @@ if not user_profile.puede_acceder():
     return redirect('detalle_profesor', profesor.id)
 ```
 
+## Actividad 5 — Patrones de Diseño
+### Patron Factory
+
+En la app de profesores en `views.py` hay múltiples funciones que generan gráficas (barras, dispersión, líneas por semestre).  Cada una cofigura matplotlib, crear buffers, codifica a base64.
+La idea de factory es generar con base a la interfaz común diferentes tipos de gráficas y no repetir la logica de la configuración.
+
+
+### Patron Facade
+En la app `review/views.py` la vista agregar_comentario tenía múltiples responsabilidades validar permisos, aprobar con IA, guardar, actualizar estadísticas. Necesitabamos simplificar la interaccion con el subsistemas de los comentarios, en teoría las vistas solo deberian preocuparse por la presentación y no la logica.
+
+## Bono — Funcionalidad nueva desde cero
+### Patron Strategy
+
+En la app pofesores en `views.py/lista_profesores` tenía múltiples if/elif para ordenar profesores, la logica de ordenamiento estaba mezclada con los filtros y agregar un nuevo criterio requería modificar la función.
+Strategy es mas flexible, elimina condicionales y permite cambiar el comportamiento en runtime sin modificar el cliente.
+
+
+
