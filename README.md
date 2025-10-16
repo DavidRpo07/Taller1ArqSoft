@@ -245,4 +245,6 @@ profesores = recommendation_engine.recommend(profesores)
 - Estrategia balanceada inteligente: requiere mínimo 3 reseñas para considerarse confiable.
 - Mejora significativa en la experiencia del usuario al navegar por la lista de profesores.
 
+---
+### En el archivo setup.txt se encuentra el paso a paso para ejecutar el proyecto.
 
