@@ -129,20 +129,144 @@ if not user_profile.puede_acceder():
 ```
 
 ## Actividad 5 — Patrones de Diseño
-### Patron Factory
 
-En la app de profesores en `views.py` hay múltiples funciones que generan gráficas (barras, dispersión, líneas por semestre).  Cada una cofigura matplotlib, crear buffers, codifica a base64.
-La idea de factory es generar con base a la interfaz común diferentes tipos de gráficas y no repetir la logica de la configuración.
+### Patrón Factory
 
+Se aplicó el patrón Factory en la generación de gráficas estadísticas del sistema.
 
-### Patron Facade
-En la app `review/views.py` la vista agregar_comentario tenía múltiples responsabilidades validar permisos, aprobar con IA, guardar, actualizar estadísticas. Necesitabamos simplificar la interaccion con el subsistemas de los comentarios, en teoría las vistas solo deberian preocuparse por la presentación y no la logica.
+**Problema identificado:**
+- En views.py se que generaban diferentes tipos de gráficas (barras, líneas, dispersión, frecuencia).
+- Cada función repetía la misma lógica de configurar matplotlib, crear buffers IO, codificar a base64 y cerrar recursos.
+
+**Implementación:**
+- Se creó chart_factory.py con una jerarquía de clases:
+  - `ChartGenerator` (clase base abstracta) define la interfaz común.
+  - Generadores concretos: `BarChartGenerator`, `LineChartGenerator`, `ScatterChartGenerator`, `FrequencyDistributionChartGenerator`, `SemesterLineChartGenerator`.
+  - `ChartFactory` actúa como factory que crea y genera gráficas según el tipo solicitado.
+- Las vistas ahora usan `ChartFactory.create_chart(tipo, datos)` en lugar de funciones individuales.
+
+**Ventajas:**
+- Reducción de líneas de código en views.py.
+- Eliminación de código duplicado.
+- Cada generador es testeable de forma independiente.
+
+**Ejemplo de uso en la vista:**
+```python
+# ANTES:
+grafica_barras = generar_grafica_barras(ratings_grafica)
+grafica_por_semestre = grafica_calificaciones_semestre(comentarios_grafica)
+
+# DESPUÉS:
+grafica_barras = ChartFactory.create_chart('bar', ratings_grafica)
+grafica_por_semestre = ChartFactory.create_chart('line', comentarios_grafica)
+```
+
+---
+
+### Patrón Facade
+
+Se aplicó el patrón Facade para simplificar el complejo subsistema de gestión de comentarios.
+
+**Problema identificado:**
+- La vista `agregar_comentario` en views.py tenía múltiples responsabilidades mezcladas:
+  - Validar permisos del usuario.
+  - Aprobar contenido con IA.
+  - Guardar en base de datos.
+  - Coordinar actualización de estadísticas (usando Signals/Observer).
+- Lógica mezclada con lógica de presentación.
+- Código difícil de testear y reutilizar en otras vistas.
+
+**Implementación:**
+- Se creó facades.py con la clase `ComentarioFacade` que actúa como punto único de acceso al subsistema de comentarios.
+- Métodos principales:
+  - `puede_usuario_comentar()`: Verifica permisos..
+  - `crear_comentario()`: Coordina validación, aprobación IA y persistencia.
+  - `editar_comentario()`: Maneja edición con re-aprobación si cambia el contenido.
+  - `eliminar_comentario()`: Elimina con validaciones y actualización de estadísticas.
+  - `obtener_estadisticas_profesor()`: Proporciona estadísticas consolidadas.
+- La fachada coordina múltiples patrones: State, Strategy, Observer.
+- 
+**Ventajas:**
+- Simplificación en las vistas: código más legible y mantenible.
+- Separación de responsabilidades: vistas solo manejan presentación, fachada maneja lógica de negocio.
+- La lógica está centralizada y puede usarse desde cualquier vista.
+- Uso de transacciones atómicas garantizando consistencia de datos.
+
+**Ejemplo de uso en la vista:**
+```python
+# ANTES (33 líneas):
+user_profile = UserProfile.objects.get_or_create(user=request.user)[0]
+if not user_profile.puede_acceder():
+    messages.error(request, user_profile.mensaje_estado() + ' No puedes agregar comentarios.')
+    return redirect('detalle_profesor', profesor_id=profesor.id)
+# ... 20+ líneas más de lógica ...
+
+# DESPUÉS (10 líneas):
+facade = ComentarioFacade()
+puede_comentar, mensaje = facade.puede_usuario_comentar(request.user)
+if not puede_comentar:
+    messages.error(request, mensaje)
+    return redirect('detalle_profesor', profesor_id=profesor.id)
+
+exito, comentario, mensaje = facade.crear_comentario(
+    form_data=form.cleaned_data,
+    profesor=profesor,
+    usuario=request.user,
+    es_anonimo=es_anonimo
+)
+```
+
+---
 
 ## Bono — Funcionalidad nueva desde cero
-### Patron Strategy
 
-En la app pofesores en `views.py/lista_profesores` tenía múltiples if/elif para ordenar profesores, la logica de ordenamiento estaba mezclada con los filtros y agregar un nuevo criterio requería modificar la función.
-Strategy es mas flexible, elimina condicionales y permite cambiar el comportamiento en runtime sin modificar el cliente.
+### Patrón Strategy (Sistema de Recomendación)
 
+Se implementó un sistema de recomendación completamente nuevo utilizando el patrón Strategy para ordenar profesores según diferentes criterios.
+
+**Problema identificado:**
+- La vista `lista_profesores` en views.py contenía múltiples bloques `if/elif` para manejar diferentes criterios de ordenamiento.
+- Agregar un nuevo criterio requería modificar directamente la función.
+- La lógica de ordenamiento estaba mezclada con los filtros de búsqueda.
+
+**Implementación:**
+- Se creó recommendation_strategies.py con una jerarquía de estrategias:
+- Registro dinámico de estrategias permite agregar nuevas sin modificar código existente.
+- Por defecto, los profesores mejor calificados aparecen primero automáticamente.
+
+**Ventajas:**
+- Eliminación total de condicionales `if/elif` en la vista.
+- Agregar nueva estrategia solo requiere crear una clase nueva.
+- Permite cambiar el algoritmo de ordenamiento en tiempo de ejecución.
+- Estrategia "balanceada" implementa lógica compleja imposible con simple `order_by()`.
+- Código más limpio y mantenible.
+
+**Ejemplo de uso en la vista:**
+```python
+# ANTES (16 líneas con if/elif):
+if orden_field:
+    if orden_field == 'mayor_rating':
+        profesores = profesores.order_by('-calificacion_media')
+    elif orden_field == 'menor_rating':
+        profesores = profesores.order_by('calificacion_media')
+    elif orden_field == 'mayor_comentarios':
+        profesores = profesores.order_by('-numcomentarios')
+    elif orden_field == 'menor_comentarios':
+        profesores = profesores.order_by('numcomentarios')
+
+# DESPUÉS (6 líneas sin condicionales):
+strategy_map = {
+    'mayor_rating': 'best_rated',
+    'mayor_comentarios': 'most_reviewed',
+    'recomendado': 'balanced'
+}
+recommendation_engine = RecommendationEngine(strategy_map.get(orden_field, 'best_rated'))
+profesores = recommendation_engine.recommend(profesores)
+```
+
+**Funcionalidad nueva:**
+- Sistema de recomendación automático: por defecto muestra los mejores profesores primero.
+- Estrategia balanceada inteligente: requiere mínimo 3 reseñas para considerarse confiable.
+- Mejora significativa en la experiencia del usuario al navegar por la lista de profesores.
 
 
