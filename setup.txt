@@ -1,0 +1,36 @@
+ setup.txt
+
+ Instrucciones para correr el proyecto ProfePulse
+
+1. Clona el repositorio:
+   git clone https://github.com/Miguel107/ProfePulse.git
+
+2. Instala Python 3.11 y pip si no los tienes.
+
+3. Instala las dependencias:
+   pip install -r requirements.txt
+
+4. Crea el archivo `keys.env` en la raíz del proyecto con el siguiente contenido:
+   OPENAI_API_KEY=tu_clave_openai
+   EMAIL_HOST=smtp.gmail.com
+   EMAIL_HOST_USER=tu_correo@gmail.com
+   EMAIL_HOST_PASSWORD=tu_contraseña_app
+
+5. Realiza las migraciones de la base de datos:
+   python manage.py makemigrations
+   python manage.py migrate
+
+6. (Opcional) Crea un superusuario para acceder al panel de administración:
+   python manage.py createsuperuser
+
+7. Corre el servidor de desarrollo:
+   python manage.py runserver
+
+8. Accede a la ruta inicial en tu navegador:
+   http://localhost:8000/
+
+ Notas adicionales
+- Si cambias configuraciones de email, actualiza el archivo `keys.env`.
+- El panel de administración está en `/admin/`.
+- Si tienes problemas con dependencias, revisa la versión de Python y pip.
+- Para reiniciar la base de datos, elimina `db.sqlite3` y repite las migraciones.
