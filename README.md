@@ -48,7 +48,7 @@
 ### Fortalezas
 - CSRF habilitado por defecto protegiendo formularios ante ataques de falsificación de solicitudes.  
 - Autenticación estándar de Django. 
-- Verificación de dos pasos** para el registro mediante código enviado al correo electrónico, reduciendo el riesgo de cuentas falsas.
+- Verificación de dos pasos para el registro mediante código enviado al correo electrónico, reduciendo el riesgo de cuentas falsas.
 - Uso de variables de entorno para credenciales.
 
 ### A mejorar 
